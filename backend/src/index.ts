@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { handle } from 'hono/vercel';
 import authRoute from './modules/auth/auth.route.ts';
 import categoryRouter from './routes/categories.ts';
 import productRouter from './routes/products.ts';
@@ -56,15 +55,11 @@ app.route('/api/v1/reviews', reviewRouter);
 app.route('/api/v1/upload', uploadRouter);
 app.route('/api/v1/farmers', farmerRouter);
 app.route('/api/v1/achievements', achievementRouter);
-app.route('/api/v1/admin', adminRouter);
+app.route('/api-v1/admin', adminRouter);
 app.route('/api-docs', docsRouter);
 
-// Export named handlers for Vercel Functions
-export const GET = handle(app);
-export const POST = handle(app);
-export const PUT = handle(app);
-export const DELETE = handle(app);
-export const PATCH = handle(app);
-
-// Default export for backward compatibility
-export default app;
+export default {
+  async fetch(request, env, ctx) {
+    return app.fetch(request);
+  },
+};
