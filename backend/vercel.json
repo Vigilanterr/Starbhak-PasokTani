@@ -2,27 +2,10 @@
   "version": 2,
   "buildCommand": "bun run build",
   "outputDirectory": "dist",
-  "framework": null,
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.js"
+  "framework": "hono",
+  "functions": {
+    "dist/index.js": {
+      "runtime": "nodejs20.x"
     }
-  ],
-  "env": {
-    "DATABASE_URL": "",
-    "JWT_SECRET": "",
-    "JWT_EXPIRES_IN": "7d",
-    "CLOUDINARY_CLOUD_NAME": "",
-    "CLOUDINARY_API_KEY": "",
-    "CLOUDINARY_API_SECRET": "",
-    "MIDTRANS_SERVER_KEY": "",
-    "MIDTRANS_CLIENT_KEY": "",
-    "MIDTRANS_IS_PRODUCTION": "false",
-    "SMTP_HOST": "",
-    "SMTP_PORT": "2525",
-    "SMTP_USER": "",
-    "SMTP_PASS": "",
-    "SMTP_FROM": ""
   }
 }
