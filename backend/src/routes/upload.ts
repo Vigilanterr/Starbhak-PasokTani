@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { authenticate } from '../middlewares/auth.ts';
-import { uploadImage, deleteImage } from '../controllers/upload.ts';
+import { authenticate } from '../middlewares/auth.js';
+import { uploadImage, deleteImage } from '../controllers/upload.js';
 
 const uploadRouter = new Hono();
 

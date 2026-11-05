@@ -1,7 +1,7 @@
 import { createMiddleware } from 'hono/factory';
-import { verifyToken } from '../utils/jwt.ts';
+import { verifyToken } from '../utils/jwt.js';
 import type { Context } from 'hono';
-import type { JwtPayload } from '../modules/auth/auth.types.ts';
+import type { JwtPayload } from '../modules/auth/auth.types.js';
 
 declare global {
   namespace HonoRequest {

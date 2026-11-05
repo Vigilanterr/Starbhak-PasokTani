@@ -1,6 +1,6 @@
-import { authService } from './auth.service.ts';
-import { registerSchema, loginSchema } from './auth.schema.ts';
-import { sendSuccess, sendError } from '../../utils/response.ts';
+import { authService } from './auth.service.js';
+import { registerSchema, loginSchema } from './auth.schema.js';
+import { sendSuccess, sendError } from '../../utils/response.js';
 import type { Context } from 'hono';
 
 export const register = async (c: Context) => {

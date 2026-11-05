@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { authenticate, authorize } from '../middlewares/auth.ts';
-import { getFarmerStats, getAdminStats } from '../controllers/dashboard.ts';
+import { authenticate, authorize } from '../middlewares/auth.js';
+import { getFarmerStats, getAdminStats } from '../controllers/dashboard.js';
 
 const dashboardRouter = new Hono();
 

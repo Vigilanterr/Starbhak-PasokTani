@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { authenticate } from '../middlewares/auth.ts';
-import { createReview, getFarmerReviews, getCommodityReviews } from '../controllers/reviews.ts';
+import { authenticate } from '../middlewares/auth.js';
+import { createReview, getFarmerReviews, getCommodityReviews } from '../controllers/reviews.js';
 
 const reviewRouter = new Hono();
 

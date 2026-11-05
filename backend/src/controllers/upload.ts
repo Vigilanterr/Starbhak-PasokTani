@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { sendSuccess, sendError } from '../utils/response.ts';
+import { sendSuccess, sendError } from '../utils/response.js';
 import type { Context } from 'hono';
 
 cloudinary.config({

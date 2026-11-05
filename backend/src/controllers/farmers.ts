@@ -1,5 +1,5 @@
-import { query } from '../config/database.ts';
-import { sendSuccess, sendError, sendPaginated } from '../utils/response.ts';
+import { query } from '../config/database.js';
+import { sendSuccess, sendError, sendPaginated } from '../utils/response.js';
 import type { Context } from 'hono';
 
 const mapFarmer = (row: Record<string, unknown>) => ({

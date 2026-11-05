@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
-import { authenticate, authorize } from '../middlewares/auth.ts';
+import { authenticate, authorize } from '../middlewares/auth.js';
 import {
   getCategories,
   getCategoriesWithCount,
   createCategory,
   updateCategory,
   deleteCategory,
-} from '../controllers/categories.ts';
+} from '../controllers/categories.js';
 
 const categoryRouter = new Hono();
 

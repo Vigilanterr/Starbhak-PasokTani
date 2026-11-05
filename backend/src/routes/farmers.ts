@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
-import { authenticate, authorize } from '../middlewares/auth.ts';
+import { authenticate, authorize } from '../middlewares/auth.js';
 import {
   listFarmers,
   getFarmerProfile,
   getFarmerProducts,
   getFarmerReviews,
   getFarmerAchievements,
-} from '../controllers/farmers.ts';
+} from '../controllers/farmers.js';
 
 const farmerRouter = new Hono();
 

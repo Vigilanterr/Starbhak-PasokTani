@@ -1,6 +1,6 @@
 import * as jwt from 'jsonwebtoken';
 import type { SignOptions } from 'jsonwebtoken';
-import type { JwtPayload } from '../modules/auth/auth.types.ts';
+import type { JwtPayload } from '../modules/auth/auth.types.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'pasoktani_secret_key';
 const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN || '7d') as SignOptions['expiresIn'];

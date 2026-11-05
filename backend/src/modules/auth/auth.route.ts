@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
-import { authenticate } from '../../middlewares/auth.ts';
-import { register, login, getMe } from './auth.controller.ts';
+import { authenticate } from '../../middlewares/auth.js';
+import { register, login, getMe } from './auth.controller.js';
 
 const authRoute = new Hono();
 

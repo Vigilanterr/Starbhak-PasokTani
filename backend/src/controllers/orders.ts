@@ -1,5 +1,5 @@
-import { query, getClient } from '../config/database.ts';
-import { sendSuccess, sendError } from '../utils/response.ts';
+import { query, getClient } from '../config/database.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 import type { Context } from 'hono';
 
 export const createOrder = async (c: Context) => {

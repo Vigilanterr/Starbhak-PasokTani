@@ -1,9 +1,9 @@
 import { ZodError } from 'zod';
-import { query } from '../../config/database.ts';
-import { sendSuccess, sendError } from '../../utils/response.ts';
-import { createAchievementSchema, updateAchievementSchema } from './achievement.schema.ts';
+import { query } from '../../config/database.js';
+import { sendSuccess, sendError } from '../../utils/response.js';
+import { createAchievementSchema, updateAchievementSchema } from './achievement.schema.js';
 import type { Context } from 'hono';
-import type { JwtPayload } from '../auth/auth.types.ts';
+import type { JwtPayload } from '../auth/auth.types.js';
 
 interface AchievementRow {
   id: number;

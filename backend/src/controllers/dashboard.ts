@@ -1,5 +1,5 @@
-import { query } from '../config/database.ts';
-import { sendSuccess, sendError } from '../utils/response.ts';
+import { query } from '../config/database.js';
+import { sendSuccess, sendError } from '../utils/response.js';
 import type { Context } from 'hono';
 
 export const getFarmerStats = async (c: Context) => {

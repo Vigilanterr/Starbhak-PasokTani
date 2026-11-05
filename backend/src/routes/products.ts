@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { authenticate, authorize } from '../middlewares/auth.ts';
+import { authenticate, authorize } from '../middlewares/auth.js';
 import {
   getProducts,
   getProduct,
@@ -9,7 +9,7 @@ import {
   deleteProduct,
   updateStock,
   togglePublish,
-} from '../controllers/products.ts';
+} from '../controllers/products.js';
 
 const productRouter = new Hono();
 

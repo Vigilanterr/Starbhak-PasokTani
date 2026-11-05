@@ -1,8 +1,8 @@
 import bcryptjs from 'bcryptjs';
-import { query } from '../../config/database.ts';
-import { generateToken } from '../../utils/jwt.ts';
-import { RegisterInput, LoginInput } from './auth.schema.ts';
-import type { User, AuthResponse, UserProfile } from './auth.types.ts';
+import { query } from '../../config/database.js';
+import { generateToken } from '../../utils/jwt.js';
+import { RegisterInput, LoginInput } from './auth.schema.js';
+import type { User, AuthResponse, UserProfile } from './auth.types.js';
 
 export const authService = {
   async register(data: RegisterInput): Promise<Omit<User, 'password'>> {

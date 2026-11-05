@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { swaggerDocument, swaggerHtml } from '../config/swagger.ts';
+import { swaggerDocument, swaggerHtml } from '../config/swagger.js';
 
 const docsRouter = new Hono();
 
