@@ -1,0 +1,39 @@
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import authRoute from './modules/auth/auth.route.ts';
+import categoryRouter from './routes/categories.ts';
+import productRouter from './routes/products.ts';
+import orderRouter from './routes/orders.ts';
+import dashboardRouter from './routes/dashboard.ts';
+import reviewRouter from './routes/reviews.ts';
+import uploadRouter from './routes/upload.ts';
+import docsRouter from './routes/docs.ts';
+import type { Context } from 'hono';
+
+const app = new Hono();
+
+app.use('*', cors());
+
+app.get('/health', (c: Context) => {
+  return c.json({ success: true, message: 'PasokTani Backend API is healthy' });
+});
+
+app.route('/api/v1/auth', authRoute);
+app.route('/api/v1/categories', categoryRouter);
+app.route('/api/v1/products', productRouter);
+app.route('/api/v1/orders', orderRouter);
+app.route('/api/v1/dashboard', dashboardRouter);
+app.route('/api/v1/reviews', reviewRouter);
+app.route('/api/v1/upload', uploadRouter);
+app.route('/api-docs', docsRouter);
+
+app.get('/', (c: Context) => {
+  return c.json({
+    message: 'Welcome to PasokTani Backend API',
+    version: '1.0.0',
+    documentation: '/api/v1/*',
+    endpoints: ['/auth', '/categories', '/products', '/orders', '/dashboard', '/reviews', '/upload'],
+  });
+});
+
+export default app;
