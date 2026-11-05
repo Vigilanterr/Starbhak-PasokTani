@@ -1,17 +1,17 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { handle } from 'hono/vercel';
-import authRoute from './modules/auth/auth.route.ts';
-import categoryRouter from './routes/categories.ts';
-import productRouter from './routes/products.ts';
-import orderRouter from './routes/orders.ts';
-import dashboardRouter from './routes/dashboard.ts';
-import reviewRouter from './routes/reviews.ts';
-import uploadRouter from './routes/upload.ts';
-import farmerRouter from './routes/farmers.ts';
-import achievementRouter from './modules/achievement/achievement.route.ts';
-import adminRouter from './routes/admin.ts';
-import docsRouter from './routes/docs.ts';
+import authRoute from './modules/auth/auth.route.js';
+import categoryRouter from './routes/categories.js';
+import productRouter from './routes/products.js';
+import orderRouter from './routes/orders.js';
+import dashboardRouter from './routes/dashboard.js';
+import reviewRouter from './routes/reviews.js';
+import uploadRouter from './routes/upload.js';
+import farmerRouter from './routes/farmers.js';
+import achievementRouter from './modules/achievement/achievement.route.js';
+import adminRouter from './routes/admin.js';
+import docsRouter from './routes/docs.js';
 import type { Context } from 'hono';
 
 const app = new Hono();
