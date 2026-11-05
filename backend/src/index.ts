@@ -7,6 +7,9 @@ import orderRouter from './routes/orders.ts';
 import dashboardRouter from './routes/dashboard.ts';
 import reviewRouter from './routes/reviews.ts';
 import uploadRouter from './routes/upload.ts';
+import farmerRouter from './routes/farmers.ts';
+import achievementRouter from './modules/achievement/achievement.route.ts';
+import adminRouter from './routes/admin.ts';
 import docsRouter from './routes/docs.ts';
 import type { Context } from 'hono';
 
@@ -25,6 +28,9 @@ app.route('/api/v1/orders', orderRouter);
 app.route('/api/v1/dashboard', dashboardRouter);
 app.route('/api/v1/reviews', reviewRouter);
 app.route('/api/v1/upload', uploadRouter);
+app.route('/api/v1/farmers', farmerRouter);
+app.route('/api/v1/achievements', achievementRouter);
+app.route('/api/v1/admin', adminRouter);
 app.route('/api-docs', docsRouter);
 
 app.get('/', (c: Context) => {
