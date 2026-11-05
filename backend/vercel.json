@@ -1,3 +1,5 @@
 {
-  "framework": "hono"
+  "version": 2,
+  "buildCommand": "bun run build",
+  "outputDirectory": "dist"
 }
