@@ -1,16 +1,17 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import authRoute from './modules/auth/auth.route';
-import categoryRouter from './routes/categories';
-import productRouter from './routes/products';
-import orderRouter from './routes/orders';
-import dashboardRouter from './routes/dashboard';
-import reviewRouter from './routes/reviews';
-import uploadRouter from './routes/upload';
-import farmerRouter from './routes/farmers';
-import achievementRouter from './modules/achievement/achievement.route';
-import adminRouter from './routes/admin';
-import docsRouter from './routes/docs';
+import { handle } from 'hono/vercel';
+import authRoute from './modules/auth/auth.route.ts';
+import categoryRouter from './routes/categories.ts';
+import productRouter from './routes/products.ts';
+import orderRouter from './routes/orders.ts';
+import dashboardRouter from './routes/dashboard.ts';
+import reviewRouter from './routes/reviews.ts';
+import uploadRouter from './routes/upload.ts';
+import farmerRouter from './routes/farmers.ts';
+import achievementRouter from './modules/achievement/achievement.route.ts';
+import adminRouter from './routes/admin.ts';
+import docsRouter from './routes/docs.ts';
 import type { Context } from 'hono';
 
 const app = new Hono();
@@ -58,8 +59,9 @@ app.route('/api/v1/achievements', achievementRouter);
 app.route('/api/v1/admin', adminRouter);
 app.route('/api-docs', docsRouter);
 
-export default {
-  async fetch(request: Request, env: any, ctx: any) {
-    return app.fetch(request);
-  },
-};
+// Hono-specific named exports for Vercel Function detection
+export const GET = handle(app);
+export const POST = handle(app);
+export const PUT = handle(app);
+export const DELETE = handle(app);
+export const PATCH = handle(app);

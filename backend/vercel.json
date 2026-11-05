@@ -1,4 +1,10 @@
 {
   "version": 2,
-  "framework": "hono"
+  "buildCommand": "bun run build",
+  "outputDirectory": "dist",
+  "functions": {
+    "dist/index.js": {
+      "runtime": "nodejs20.x"
+    }
+  }
 }
