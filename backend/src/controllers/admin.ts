@@ -88,7 +88,7 @@ export const getUsers = async (c: Context) => {
 export const updateUserStatus = async (c: Context) => {
   try {
     const admin = c.get('user') as { userId: number };
-    const id = parseInt(c.req.param('id'), 10);
+    const id = parseIntParam(c.req.param('id'), 1);
     const body = await c.req.json<{ status: string; reason?: string }>();
 
     if (id === admin.userId) {
@@ -159,7 +159,7 @@ export const getCommodities = async (c: Context) => {
 
 export const updateCommodityStatus = async (c: Context) => {
   try {
-    const id = parseInt(c.req.param('id'), 10);
+    const id = parseIntParam(c.req.param('id'), 1);
     const body = await c.req.json<{ status: string; reason?: string }>();
 
     const target = await query('SELECT id FROM commodities WHERE id = $1', [id]);

@@ -10,12 +10,13 @@
     "db:init": "psql $DATABASE_URL < migrations/001_init_schema.sql"
   },
   "dependencies": {
-    "hono": "^4.13.13",
-    "pg": "^8.23.1",
     "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.10.0",
+    "hono": "^4.13.13",
     "jsonwebtoken": "^9.0.2",
-    "zod": "^3.24.1",
-    "cloudinary": "^2.10.0"
+    "midtrans-client": "^1.4.3",
+    "pg": "^8.23.1",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/bun": "^1.4.2",
