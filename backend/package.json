@@ -1,0 +1,27 @@
+{
+  "name": "pasoktani-backend",
+  "version": "1.0.0",
+  "description": "PasokTani REST API Backend - Hono + Bun",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bun dist/index.js",
+    "db:init": "psql $DATABASE_URL < migrations/001_init_schema.sql"
+  },
+  "dependencies": {
+    "hono": "^4.13.13",
+    "pg": "^8.23.1",
+    "bcryptjs": "^3.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.24.1",
+    "cloudinary": "^2.10.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/pg": "^8.12.1",
+    "typescript": "^5.7.2"
+  }
+}
