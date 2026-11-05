@@ -17,6 +17,31 @@ const app = new Hono();
 
 app.use('*', cors());
 
+app.get('/', (c: Context) => {
+  return c.json({
+    success: true,
+    message: 'PASOKTANI API is running',
+    version: '1.0.0',
+    docs: '/api-docs',
+    endpoints: [
+      '/health',
+      '/api/v1/auth/register',
+      '/api/v1/auth/login',
+      '/api/v1/auth/me',
+      '/api/v1/categories',
+      '/api/v1/products',
+      '/api/v1/orders',
+      '/api/v1/dashboard/farmer',
+      '/api/v1/dashboard/admin',
+      '/api/v1/reviews',
+      '/api/v1/upload/image',
+      '/api/v1/farmers',
+      '/api/v1/achievements',
+      '/api/v1/admin',
+    ],
+  });
+});
+
 app.get('/health', (c: Context) => {
   return c.json({ success: true, message: 'PasokTani Backend API is healthy' });
 });
@@ -32,14 +57,5 @@ app.route('/api/v1/farmers', farmerRouter);
 app.route('/api/v1/achievements', achievementRouter);
 app.route('/api/v1/admin', adminRouter);
 app.route('/api-docs', docsRouter);
-
-app.get('/', (c: Context) => {
-  return c.json({
-    message: 'Welcome to PasokTani Backend API',
-    version: '1.0.0',
-    documentation: '/api/v1/*',
-    endpoints: ['/auth', '/categories', '/products', '/orders', '/dashboard', '/reviews', '/upload'],
-  });
-});
 
 export default app;

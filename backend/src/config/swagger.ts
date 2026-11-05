@@ -49,7 +49,7 @@ export const swaggerDocument = {
     description:
       'REST API PasokTani untuk menghubungkan petani dengan pembeli. Seluruh response menggunakan format JSON.',
   },
-  servers: [{ url: '/' }],
+  servers: [{ url: 'https://backend.pasoktani.my.id' }],
   tags: [
     { name: 'System' },
     { name: 'Auth' },
@@ -745,7 +745,7 @@ export const swaggerHtml = `<!DOCTYPE html>
     <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
     <script>
       window.ui = SwaggerUIBundle({
-        url: '/api-docs/openapi.json',
+        url: 'https://backend.pasoktani.my.id/api-docs/openapi.json',
         dom_id: '#swagger-ui',
         deepLinking: true,
         presets: [SwaggerUIBundle.presets.apis],
