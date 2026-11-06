@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { BagianKontak } from "./_beranda/bagian-kontak";
-import { BagianDuaPeran } from "./_landing/dua-peran";
 import { HeroLanding } from "./_landing/hero";
 import { BagianKenapa } from "./_landing/kenapa";
 import { BagianLangkah } from "./_landing/langkah";
@@ -22,7 +21,6 @@ export default function Landing() {
       <BagianRancangan />
       <BagianProdukPilihan />
       <BagianLangkah />
-      <BagianDuaPeran />
       <BagianTestimoniLanding />
       <BagianKontak />
     </>
