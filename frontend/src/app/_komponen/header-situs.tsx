@@ -1,26 +1,24 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { kelasTombolSitus } from "./tombol";
 
-// Tautan beranda menunjuk ke bagian halaman utama (landing) yang belum dibuat.
+// Bagian landing (/#...) + katalog produk.
 const NAV = [
-  { label: "Beranda", href: "/" },
-  { label: "Fitur", href: "/#fitur" },
   { label: "Tentang", href: "/#tentang" },
-  { label: "Testimoni", href: "/#testimoni" },
+  { label: "Fitur", href: "/#fitur" },
+  { label: "Cara Kerja", href: "/#cara-kerja" },
+  { label: "Produk", href: "/produk" },
   { label: "Kontak", href: "/#kontak" },
 ];
 
-// TODO: ganti placeholder dengan logo Pasok Tani setelah aset logo tersedia.
 function LogoSitus() {
   return (
-    <Link href="/" className="flex shrink-0 items-center gap-3 whitespace-nowrap no-underline">
-      <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[#d9d9d9] text-[11px] text-ink">
-        Logo
-      </span>
-      <span className="text-lg font-medium text-muted">Pasok Tani</span>
+    <Link href="/" className="flex shrink-0 items-center gap-2.5 whitespace-nowrap no-underline">
+      <Image src="/images/logo/color-logo-pasoktani.png" alt="" width={40} height={37} priority className="h-9 w-auto" />
+      <span className="text-lg font-bold text-brand-900">Pasok Tani</span>
     </Link>
   );
 }
@@ -41,7 +39,7 @@ export function HeaderSitus() {
             terbuka ? "absolute inset-x-0 top-full z-10 border-b border-line bg-cream px-4 pb-3 shadow-sm" : "hidden"
           } lg:static lg:block lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none`}
         >
-          <ul className="flex flex-col whitespace-nowrap lg:flex-row lg:items-center lg:gap-10 xl:gap-14">
+          <ul className="flex flex-col whitespace-nowrap lg:flex-row lg:items-center lg:gap-8 xl:gap-12">
             {NAV.map((n) => (
               <li key={n.label}>
                 <Link
@@ -53,12 +51,20 @@ export function HeaderSitus() {
                 </Link>
               </li>
             ))}
+            <li className="sm:hidden">
+              <Link href="/masuk" onClick={() => setTerbuka(false)} className="block py-3 text-[17px] font-medium text-ink no-underline hover:text-brand-600">
+                Masuk
+              </Link>
+            </li>
           </ul>
         </nav>
 
         <div className="flex items-center gap-2 lg:justify-self-end">
-          <Link href="/masuk" className={`${kelasTombolSitus("aksen")} whitespace-nowrap`}>
+          <Link href="/masuk" className={`${kelasTombolSitus("garis")} hidden whitespace-nowrap sm:inline-flex`}>
             Masuk
+          </Link>
+          <Link href="/daftar" className={`${kelasTombolSitus("aksen")} whitespace-nowrap`}>
+            Daftar
           </Link>
           <button
             type="button"

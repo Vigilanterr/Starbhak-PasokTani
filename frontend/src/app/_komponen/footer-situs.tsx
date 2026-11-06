@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const TAUTAN = [
@@ -12,7 +13,13 @@ export function FooterSitus() {
   return (
     <footer className="bg-brand-900 px-4 pt-12 pb-10 text-cream md:px-15">
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-        <p className="text-xl font-bold text-white">Pasok Tani</p>
+        <p className="flex items-center gap-3 text-xl font-bold text-white">
+          {/* Logo berwarna gelap, jadi diberi latar terang agar terbaca di atas hijau tua. */}
+          <span className="grid size-11 place-items-center rounded-xl bg-cream">
+            <Image src="/images/logo/color-logo-pasoktani.png" alt="" width={32} height={30} className="h-7 w-auto" />
+          </span>
+          Pasok Tani
+        </p>
         <nav aria-label="Tautan footer">
           <ul className="flex flex-wrap gap-x-8 gap-y-2">
             {TAUTAN.map((t) => (
