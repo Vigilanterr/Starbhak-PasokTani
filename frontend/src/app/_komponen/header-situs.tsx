@@ -60,7 +60,7 @@ export function HeaderSitus() {
         </nav>
 
         <div className="flex items-center gap-2 lg:justify-self-end">
-          <Link href="/masuk" className={`${kelasTombolSitus("garis")} hidden whitespace-nowrap sm:inline-flex`}>
+          <Link href="/masuk" className={`${kelasTombolSitus("garis")} whitespace-nowrap max-sm:hidden`}>
             Masuk
           </Link>
           <Link href="/daftar" className={`${kelasTombolSitus("aksen")} whitespace-nowrap`}>
