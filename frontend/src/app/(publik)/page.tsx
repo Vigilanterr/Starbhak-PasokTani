@@ -22,7 +22,7 @@ export default function Landing() {
       <BagianProdukPilihan />
       <BagianLangkah />
       <BagianTestimoniLanding />
-      <BagianKontak />
+      <BagianKontak varian="landing" />
     </>
   );
 }
