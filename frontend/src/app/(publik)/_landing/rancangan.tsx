@@ -19,8 +19,10 @@ export function BagianRancangan() {
         <ul className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {FITUR.map((f) => (
             <li key={f.judul}>
-              <Ikon nama={f.ikon} className="text-mint" />
-              <h3 className="mt-3 text-[15px] font-bold">{f.judul}</h3>
+              <span className="grid size-12 place-items-center rounded-xl bg-mint text-brand-900">
+                <Ikon nama={f.ikon} strokeWidth={1.8} />
+              </span>
+              <h3 className="mt-4 text-base font-bold">{f.judul}</h3>
               <p className="mt-2 text-sm leading-relaxed text-white/85">{f.isi}</p>
             </li>
           ))}
