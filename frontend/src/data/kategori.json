@@ -1,0 +1,8 @@
+[
+  { "slug": "sayuran", "nama": "Sayuran", "deskripsi": "Sayur daun, sayur buah, dan kacang-kacangan segar dari kebun dataran tinggi Jawa Barat.", "ikon": "sayuran" },
+  { "slug": "buah", "nama": "Buah", "deskripsi": "Buah lokal musiman langsung dari kebun petani.", "ikon": "buah" },
+  { "slug": "bumbu-rempah", "nama": "Bumbu & Rempah", "deskripsi": "Cabai, bawang, jahe, dan rempah dapur untuk usaha kuliner.", "ikon": "rempah" },
+  { "slug": "beras-biji", "nama": "Beras & Biji-bijian", "deskripsi": "Beras, jagung, dan kacang kering dari sawah dan ladang.", "ikon": "padi" },
+  { "slug": "umbi", "nama": "Umbi-umbian", "deskripsi": "Kentang, singkong, ubi, dan wortel.", "ikon": "umbi" },
+  { "slug": "jamur", "nama": "Jamur", "deskripsi": "Jamur tiram dan jamur kuping segar dari kumbung petani.", "ikon": "jamur" }
+]

@@ -1,1 +1,40 @@
 @import "tailwindcss";
+
+/* Varian untuk layar pendek (tinggi viewport <= 700px), mis. laptop dengan chrome browser. */
+@custom-variant short (@media (max-height: 700px));
+
+:root {
+  --background: #fcfbf6;
+  --foreground: #173b2b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+}
+
+/* Pasok Tani brand tokens */
+@theme {
+  --color-brand-900: #064e3b;
+  --color-brand-600: #1e8b5a;
+  --color-accent: #10b981;
+  --color-accent-hover: #0ea371;
+  --color-mint: #d5f6d5;
+  --color-cream: #fcfbf6;
+  --color-ink: #173b2b;
+  --color-muted: #686868;
+  --color-field-border: #7d877e;
+  --color-placeholder: #767676;
+  --color-line: #dee3da;
+  --color-tint: #ebf2eb;
+  --color-danger: #b42318;
+  --color-danger-bg: #fdecea;
+  --color-danger-line: #f2b8b2;
+  --color-danger-ink: #8a1c12;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}

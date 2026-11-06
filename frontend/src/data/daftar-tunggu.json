@@ -1,0 +1,311 @@
+[
+  {
+    "id": "dt-001",
+    "komoditas": "Cabai Rawit Merah",
+    "kategori": "bumbu-rempah",
+    "petaniId": "tani-cikajang",
+    "deskripsi": "Cabai rawit varietas lokal, ditanam di lahan 0,5 ha. Cocok untuk warung dan katering.",
+    "status": "sudah-tanam",
+    "tanggalTanam": "2026-09-15",
+    "jadwalPanen": { "jenis": "rentang", "mulai": "2026-12-10", "selesai": "2026-12-15" },
+    "perkiraanHasil": 800,
+    "satuan": "kg",
+    "hargaPerkiraan": 45000,
+    "kuota": 500,
+    "terkomitmen": 320,
+    "jumlahKomitmen": 14,
+    "pengikut": 126,
+    "minKomitmen": 5,
+    "linimasa": [
+      { "tanggal": "2026-09-22", "jenis": "status", "judul": "Daftar tunggu dibuka", "isi": "Bibit cabai rawit sudah ditanam 15 September di lahan 0,5 ha." },
+      { "tanggal": "2026-10-05", "jenis": "foto", "judul": "Kabar lahan", "isi": "Tanaman setinggi sekitar 30 cm, pemupukan susulan pertama selesai." },
+      { "tanggal": "2026-10-20", "jenis": "foto", "judul": "Kabar lahan", "isi": "Tanaman mulai berbunga." },
+      { "tanggal": "2026-11-02", "jenis": "catatan", "judul": "Buah pertama muncul", "isi": "Buah pertama mulai terbentuk. Perkiraan panen tetap 10–15 Desember." }
+    ],
+    "kabarLahan": [
+      { "tanggal": "2026-11-02", "keterangan": "Buah pertama mulai terbentuk", "src": null },
+      { "tanggal": "2026-10-20", "keterangan": "Tanaman mulai berbunga", "src": null },
+      { "tanggal": "2026-10-05", "keterangan": "Tanaman setinggi sekitar 30 cm", "src": null }
+    ],
+    "produkSlug": null,
+    "dibuat": "2026-09-22"
+  },
+  {
+    "id": "dt-002",
+    "komoditas": "Beras Ketan Putih",
+    "kategori": "beras-biji",
+    "petaniId": "tani-sauyunan-rengasdengklok",
+    "deskripsi": "Ketan putih varietas lokal untuk usaha kue, tape, dan uli. Tanam menunggu giliran air irigasi musim hujan, jadi perkiraan panen belum bisa dipastikan.",
+    "status": "jadwal-tanam",
+    "tanggalTanam": null,
+    "jadwalPanen": { "jenis": "belum-ada" },
+    "perkiraanHasil": 3000,
+    "satuan": "kg",
+    "hargaPerkiraan": 18000,
+    "kuota": null,
+    "terkomitmen": 150,
+    "jumlahKomitmen": 6,
+    "pengikut": 84,
+    "minKomitmen": 10,
+    "linimasa": [
+      { "tanggal": "2026-10-12", "jenis": "status", "judul": "Jadwal tanam dibuat", "isi": "Rencana tanam ketan di lahan 1 ha pada awal musim hujan." },
+      { "tanggal": "2026-10-26", "jenis": "catatan", "judul": "Menunggu air irigasi", "isi": "Giliran air dari saluran irigasi belum turun. Tanggal tanam akan diumumkan setelah jadwal air keluar." },
+      { "tanggal": "2026-11-02", "jenis": "foto", "judul": "Pengolahan lahan", "isi": "Sawah sudah dibajak dan pematang diperbaiki." }
+    ],
+    "kabarLahan": [
+      { "tanggal": "2026-11-02", "keterangan": "Sawah dibajak, menunggu air irigasi", "src": null }
+    ],
+    "produkSlug": null,
+    "dibuat": "2026-10-12"
+  },
+  {
+    "id": "dt-003",
+    "komoditas": "Ubi Cilembu",
+    "kategori": "umbi",
+    "petaniId": "tani-cilembu-asli",
+    "deskripsi": "Ubi cilembu asli dari lahan 1 ha di Desa Cilembu. Setelah panen, ubi diperam 2–3 minggu sebelum dikirim agar madunya keluar.",
+    "status": "jadwal-tanam",
+    "tanggalTanam": "2026-11-20",
+    "jadwalPanen": { "jenis": "rentang", "mulai": "2027-03-25", "selesai": "2027-04-10" },
+    "perkiraanHasil": 4000,
+    "satuan": "kg",
+    "hargaPerkiraan": 14000,
+    "kuota": 1500,
+    "terkomitmen": 420,
+    "jumlahKomitmen": 23,
+    "pengikut": 268,
+    "minKomitmen": 10,
+    "linimasa": [
+      { "tanggal": "2026-10-15", "jenis": "status", "judul": "Jadwal tanam dibuat", "isi": "Rencana tanam 20 November di lahan 1 ha." },
+      { "tanggal": "2026-10-28", "jenis": "catatan", "judul": "Bibit disiapkan", "isi": "Stek bibit diambil dari tanaman induk cilembu asli." },
+      { "tanggal": "2026-11-03", "jenis": "foto", "judul": "Persiapan lahan", "isi": "Guludan mulai dibuat dan diberi pupuk kandang." }
+    ],
+    "kabarLahan": [
+      { "tanggal": "2026-11-03", "keterangan": "Pembuatan guludan di lahan Cilembu", "src": null },
+      { "tanggal": "2026-10-28", "keterangan": "Stek bibit dari tanaman induk", "src": null }
+    ],
+    "produkSlug": null,
+    "dibuat": "2026-10-15"
+  },
+  {
+    "id": "dt-004",
+    "komoditas": "Jagung Manis",
+    "kategori": "sayuran",
+    "petaniId": "kebun-nanas-jalancagak",
+    "deskripsi": "Jagung manis hibrida di lahan 0,6 ha, dipanen umur sekitar 78 hari. Cocok untuk penjual jagung bakar, sup, dan pipilan katering.",
+    "status": "sudah-tanam",
+    "tanggalTanam": "2026-10-20",
+    "jadwalPanen": { "jenis": "tanggal", "tanggal": "2027-01-06" },
+    "perkiraanHasil": 5000,
+    "satuan": "kg",
+    "hargaPerkiraan": 9000,
+    "kuota": 2000,
+    "terkomitmen": 650,
+    "jumlahKomitmen": 19,
+    "pengikut": 142,
+    "minKomitmen": 10,
+    "linimasa": [
+      { "tanggal": "2026-10-08", "jenis": "status", "judul": "Jadwal tanam dibuat", "isi": "Rencana tanam 20 Oktober di lahan 0,6 ha." },
+      { "tanggal": "2026-10-20", "jenis": "status", "judul": "Sudah ditanam", "isi": "Benih jagung manis hibrida ditanam dengan jarak 70 x 20 cm." },
+      { "tanggal": "2026-10-30", "jenis": "foto", "judul": "Kabar lahan", "isi": "Tunas tumbuh merata, umur 10 hari." },
+      { "tanggal": "2026-11-03", "jenis": "catatan", "judul": "Perawatan", "isi": "Penyiangan dan pemupukan pertama selesai." }
+    ],
+    "kabarLahan": [
+      { "tanggal": "2026-11-03", "keterangan": "Penyiangan dan pemupukan pertama", "src": null },
+      { "tanggal": "2026-10-30", "keterangan": "Tunas jagung umur 10 hari", "src": null }
+    ],
+    "produkSlug": null,
+    "dibuat": "2026-10-08"
+  },
+  {
+    "id": "dt-005",
+    "komoditas": "Bawang Merah Bima",
+    "kategori": "bumbu-rempah",
+    "petaniId": "kebun-gincu-jatibarang",
+    "deskripsi": "Bawang merah varietas Bima di lahan 0,5 ha. Setelah panen dijemur 5–7 hari agar kering dan tahan disimpan.",
+    "status": "sudah-tanam",
+    "tanggalTanam": "2026-10-10",
+    "jadwalPanen": { "jenis": "rentang", "mulai": "2026-12-08", "selesai": "2026-12-14" },
+    "perkiraanHasil": 4000,
+    "satuan": "kg",
+    "hargaPerkiraan": 34000,
+    "kuota": 600,
+    "terkomitmen": 600,
+    "jumlahKomitmen": 34,
+    "pengikut": 312,
+    "minKomitmen": 5,
+    "linimasa": [
+      { "tanggal": "2026-09-25", "jenis": "status", "judul": "Jadwal tanam dibuat", "isi": "Rencana tanam 10 Oktober di lahan 0,5 ha." },
+      { "tanggal": "2026-10-10", "jenis": "status", "judul": "Sudah ditanam", "isi": "Bibit umbi Bima ditanam di bedengan yang sudah ditinggikan." },
+      { "tanggal": "2026-10-24", "jenis": "foto", "judul": "Kabar lahan", "isi": "Daun tumbuh serempak, umur 2 minggu." },
+      { "tanggal": "2026-11-01", "jenis": "catatan", "judul": "Kuota Komitmen penuh", "isi": "Kuota 600 kg sudah terisi. Kamu tetap bisa mengikuti daftar tunggu ini untuk kabar panen." }
+    ],
+    "kabarLahan": [
+      { "tanggal": "2026-11-01", "keterangan": "Umur 3 minggu, mulai penyiangan", "src": null },
+      { "tanggal": "2026-10-24", "keterangan": "Daun tumbuh serempak", "src": null }
+    ],
+    "produkSlug": null,
+    "dibuat": "2026-09-25"
+  },
+  {
+    "id": "dt-006",
+    "komoditas": "Bawang Putih Lumbu Hijau",
+    "kategori": "bumbu-rempah",
+    "petaniId": "tani-lereng-argapura",
+    "deskripsi": "Bawang putih lokal varietas Lumbu Hijau di lahan 0,5 ha lereng Ciremai. Dijual kering setelah dijemur di para-para.",
+    "status": "panen-tertunda",
+    "tanggalTanam": "2026-07-10",
+    "jadwalPanen": { "jenis": "rentang", "mulai": "2026-11-16", "selesai": "2026-11-22" },
+    "perkiraanHasil": 2500,
+    "satuan": "kg",
+    "hargaPerkiraan": 38000,
+    "kuota": 1000,
+    "terkomitmen": 540,
+    "jumlahKomitmen": 27,
+    "pengikut": 205,
+    "minKomitmen": 5,
+    "linimasa": [
+      { "tanggal": "2026-06-28", "jenis": "status", "judul": "Jadwal tanam dibuat", "isi": "Rencana tanam 10 Juli di lahan 0,5 ha." },
+      { "tanggal": "2026-07-10", "jenis": "status", "judul": "Sudah ditanam", "isi": "Siung bibit Lumbu Hijau ditanam di bedengan berjerami." },
+      { "tanggal": "2026-08-30", "jenis": "foto", "judul": "Kabar lahan", "isi": "Tanaman sehat dan umbi mulai terbentuk." },
+      { "tanggal": "2026-10-08", "jenis": "catatan", "judul": "Perkiraan panen", "isi": "Panen diperkirakan 28 Oktober–2 November." },
+      { "tanggal": "2026-10-24", "jenis": "jadwal", "judul": "Jadwal panen diundur", "isi": "Perkiraan panen baru 16–22 November 2026.", "alasan": "Hujan deras sejak pertengahan Oktober membuat umbi belum cukup tua dan tanah terlalu basah untuk dicabut. Panen dalam kondisi basah berisiko membuat umbi busuk saat dikeringkan." },
+      { "tanggal": "2026-10-24", "jenis": "status", "judul": "Panen Tertunda", "isi": "Status berubah menjadi Panen Tertunda. Komitmen tetap berlaku dan kamu bisa membatalkannya tanpa biaya.", "alasan": "Curah hujan tinggi menunda pematangan umbi." },
+      { "tanggal": "2026-11-03", "jenis": "foto", "judul": "Kabar lahan", "isi": "Saluran air di antara bedengan diperdalam agar lahan cepat kering." }
+    ],
+    "kabarLahan": [
+      { "tanggal": "2026-11-03", "keterangan": "Saluran bedengan diperdalam agar air cepat surut", "src": null },
+      { "tanggal": "2026-10-24", "keterangan": "Lahan basah setelah hujan deras", "src": null },
+      { "tanggal": "2026-08-30", "keterangan": "Umbi mulai terbentuk", "src": null }
+    ],
+    "produkSlug": null,
+    "dibuat": "2026-06-28"
+  },
+  {
+    "id": "dt-007",
+    "komoditas": "Tomat Merah",
+    "kategori": "sayuran",
+    "petaniId": "kebun-mang-ujang",
+    "deskripsi": "Tomat sayur di lahan 0,4 ha, dipetik matang pohon dan dipilah ukuran sebelum dikirim. Cocok untuk warung, katering, dan pembuat sambal.",
+    "status": "panen-lebih-awal",
+    "tanggalTanam": "2026-08-28",
+    "jadwalPanen": { "jenis": "rentang", "mulai": "2026-11-12", "selesai": "2026-11-18" },
+    "perkiraanHasil": 3000,
+    "satuan": "kg",
+    "hargaPerkiraan": 13000,
+    "kuota": 1200,
+    "terkomitmen": 380,
+    "jumlahKomitmen": 21,
+    "pengikut": 174,
+    "minKomitmen": 5,
+    "linimasa": [
+      { "tanggal": "2026-08-20", "jenis": "status", "judul": "Jadwal tanam dibuat", "isi": "Rencana tanam 28 Agustus, perkiraan panen 24–30 November." },
+      { "tanggal": "2026-08-28", "jenis": "status", "judul": "Sudah ditanam", "isi": "Bibit tomat ditanam di bedengan bermulsa plastik." },
+      { "tanggal": "2026-09-30", "jenis": "foto", "judul": "Kabar lahan", "isi": "Tanaman setinggi 1 meter dan mulai diajir." },
+      { "tanggal": "2026-10-21", "jenis": "foto", "judul": "Kabar lahan", "isi": "Buah pertama mulai terbentuk." },
+      { "tanggal": "2026-10-31", "jenis": "jadwal", "judul": "Jadwal panen dimajukan", "isi": "Cuaca cerah di akhir Oktober mempercepat pematangan buah. Perkiraan panen baru 12–18 November 2026." },
+      { "tanggal": "2026-10-31", "jenis": "status", "judul": "Panen Lebih Awal", "isi": "Pembeli Komitmen akan dihubungi untuk menyesuaikan jadwal kirim." }
+    ],
+    "kabarLahan": [
+      { "tanggal": "2026-11-02", "keterangan": "Buah tomat mulai bersemu merah", "src": null },
+      { "tanggal": "2026-10-21", "keterangan": "Buah pertama terbentuk", "src": null },
+      { "tanggal": "2026-09-30", "keterangan": "Tanaman mulai diajir", "src": null }
+    ],
+    "produkSlug": null,
+    "dibuat": "2026-08-20"
+  },
+  {
+    "id": "dt-008",
+    "komoditas": "Kembang Kol Organik",
+    "kategori": "sayuran",
+    "petaniId": "kebun-organik-pacet",
+    "deskripsi": "Kembang kol organik di lahan 0,3 ha (sekitar 4.000 tanaman), dipanen saat bunga masih putih rapat.",
+    "status": "gagal-panen",
+    "tanggalTanam": "2026-08-18",
+    "jadwalPanen": { "jenis": "tanggal", "tanggal": "2026-11-05" },
+    "perkiraanHasil": 1200,
+    "satuan": "kg",
+    "hargaPerkiraan": 18000,
+    "kuota": 400,
+    "terkomitmen": 260,
+    "jumlahKomitmen": 17,
+    "pengikut": 96,
+    "minKomitmen": 3,
+    "linimasa": [
+      { "tanggal": "2026-08-05", "jenis": "status", "judul": "Jadwal tanam dibuat", "isi": "Rencana tanam 18 Agustus, perkiraan panen 5 November." },
+      { "tanggal": "2026-08-18", "jenis": "status", "judul": "Sudah ditanam", "isi": "Sekitar 4.000 bibit ditanam di lahan 0,3 ha." },
+      { "tanggal": "2026-09-20", "jenis": "foto", "judul": "Kabar lahan", "isi": "Tanaman umur sebulan tumbuh baik." },
+      { "tanggal": "2026-10-15", "jenis": "catatan", "judul": "Sebagian tanaman layu", "isi": "Beberapa bedengan layu di siang hari. Sedang diperiksa bersama penyuluh pertanian." },
+      { "tanggal": "2026-10-27", "jenis": "status", "judul": "Gagal Panen", "isi": "Mohon maaf, panen kembang kol batch ini dinyatakan gagal. Seluruh dana Komitmen dikembalikan penuh dalam 1–3 hari kerja.", "alasan": "Penyakit akar gada meluas setelah hujan terus-menerus. Sekitar 85% tanaman layu dan bunga tidak terbentuk." },
+      { "tanggal": "2026-10-30", "jenis": "catatan", "judul": "Pengembalian dana selesai", "isi": "Pengembalian dana untuk 17 Komitmen sudah diproses. Lahan diistirahatkan dan diberi kapur dolomit sebelum tanam berikutnya." }
+    ],
+    "kabarLahan": [
+      { "tanggal": "2026-10-27", "keterangan": "Tanaman layu akibat akar gada", "src": null },
+      { "tanggal": "2026-09-20", "keterangan": "Tanaman umur sebulan", "src": null }
+    ],
+    "produkSlug": null,
+    "dibuat": "2026-08-05"
+  },
+  {
+    "id": "dt-009",
+    "komoditas": "Wortel",
+    "kategori": "umbi",
+    "petaniId": "tani-mekar-pangalengan",
+    "deskripsi": "Wortel lokal di lahan 1 ha Pangalengan, dicuci dan dipilah ukuran sebelum dikirim.",
+    "status": "siap-panen",
+    "tanggalTanam": "2026-07-25",
+    "jadwalPanen": { "jenis": "tanggal", "tanggal": "2026-10-28" },
+    "perkiraanHasil": 6000,
+    "satuan": "kg",
+    "hargaPerkiraan": 11000,
+    "kuota": 2000,
+    "terkomitmen": 1450,
+    "jumlahKomitmen": 38,
+    "pengikut": 236,
+    "minKomitmen": 10,
+    "linimasa": [
+      { "tanggal": "2026-07-15", "jenis": "status", "judul": "Jadwal tanam dibuat", "isi": "Rencana tanam 25 Juli, perkiraan panen 28 Oktober." },
+      { "tanggal": "2026-07-25", "jenis": "status", "judul": "Sudah ditanam", "isi": "Benih wortel ditabur di lahan 1 ha." },
+      { "tanggal": "2026-09-05", "jenis": "foto", "judul": "Kabar lahan", "isi": "Daun rimbun dan umbi mulai membesar." },
+      { "tanggal": "2026-10-10", "jenis": "catatan", "judul": "Jadwal tetap", "isi": "Perkiraan panen tetap 28 Oktober." },
+      { "tanggal": "2026-10-28", "jenis": "status", "judul": "Siap Panen", "isi": "Panen dimulai. Pembeli Komitmen mendapat tagihan pelunasan, sisa hasil dijual di halaman produk." }
+    ],
+    "kabarLahan": [
+      { "tanggal": "2026-10-28", "keterangan": "Panen hari pertama", "src": null },
+      { "tanggal": "2026-09-05", "keterangan": "Umbi mulai membesar", "src": null }
+    ],
+    "produkSlug": "wortel-pangalengan",
+    "dibuat": "2026-07-15"
+  },
+  {
+    "id": "dt-010",
+    "komoditas": "Kacang Tanah",
+    "kategori": "beras-biji",
+    "petaniId": "kumbung-jamur-ciremai",
+    "deskripsi": "Kacang tanah lokal di lahan 0,4 ha, dijemur dan dikupas sebelum dikirim.",
+    "status": "siap-panen",
+    "tanggalTanam": "2026-07-20",
+    "jadwalPanen": { "jenis": "tanggal", "tanggal": "2026-10-28" },
+    "perkiraanHasil": 900,
+    "satuan": "kg",
+    "hargaPerkiraan": 28000,
+    "kuota": null,
+    "terkomitmen": 180,
+    "jumlahKomitmen": 9,
+    "pengikut": 58,
+    "minKomitmen": 5,
+    "linimasa": [
+      { "tanggal": "2026-07-10", "jenis": "status", "judul": "Jadwal tanam dibuat", "isi": "Rencana tanam 20 Juli setelah panen padi." },
+      { "tanggal": "2026-07-20", "jenis": "status", "judul": "Sudah ditanam", "isi": "Benih kacang tanah ditanam di lahan 0,4 ha." },
+      { "tanggal": "2026-08-25", "jenis": "foto", "judul": "Kabar lahan", "isi": "Tanaman berbunga merata." },
+      { "tanggal": "2026-10-28", "jenis": "status", "judul": "Siap Panen", "isi": "Panen dimulai dan langsung dijemur." },
+      { "tanggal": "2026-11-01", "jenis": "catatan", "judul": "Siap dikirim", "isi": "Kacang selesai dijemur 3 hari dan dikupas. Pesanan Komitmen mulai dikirim." }
+    ],
+    "kabarLahan": [
+      { "tanggal": "2026-11-01", "keterangan": "Penjemuran kacang tanah", "src": null },
+      { "tanggal": "2026-10-28", "keterangan": "Panen kacang tanah", "src": null }
+    ],
+    "produkSlug": "kacang-tanah-kuningan",
+    "dibuat": "2026-07-10"
+  }
+]
