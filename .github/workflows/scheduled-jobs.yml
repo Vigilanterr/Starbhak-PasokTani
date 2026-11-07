@@ -1,0 +1,60 @@
+# Scheduled background jobs for Pasok Tani.
+# Each job is a secret-guarded route handler under /api/cron/<job> (see docs/database/documentation.md, section 7).
+# GitHub cron expressions are UTC. WIB = UTC+7.
+name: Scheduled jobs
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"    # reservation sweeper, remainder deadline, outbox sweep, presence flush
+    - cron: "*/15 * * * *"   # escrow auto-release, auto-cancel
+    - cron: "5 17 * * *"     # surplus and expiry, 00:05 WIB
+    - cron: "30 17 * * *"    # analytics rollup, 00:30 WIB
+    - cron: "0 * * * *"      # media cleanup
+    - cron: "0 0 1 * *"      # badge evaluation, 1st of the month, 07:00 WIB
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Job path under /api/cron/ to run once, for example auto-cancel"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.job || github.event.schedule }}
+    runs-on: ubuntu-latest
+    # Calls for the same schedule do not overlap. Advisory locks in the database protect each job as well.
+    concurrency:
+      group: scheduled-${{ github.event_name == 'workflow_dispatch' && inputs.job || github.event.schedule }}
+      cancel-in-progress: false
+    env:
+      APP_URL: ${{ vars.APP_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - name: Call job endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            jobs=("${{ inputs.job }}")
+          else
+            case "${{ github.event.schedule }}" in
+              "*/5 * * * *")  jobs=(reservation-sweeper remainder-deadline outbox-sweep presence-flush) ;;
+              "*/15 * * * *") jobs=(escrow-auto-release auto-cancel) ;;
+              "5 17 * * *")   jobs=(surplus-expiry) ;;
+              "30 17 * * *")  jobs=(analytics-rollup) ;;
+              "0 * * * *")    jobs=(media-cleanup) ;;
+              "0 0 1 * *")    jobs=(badge-evaluation) ;;
+              *) echo "No job mapped to schedule '${{ github.event.schedule }}'"; exit 1 ;;
+            esac
+          fi
+          for job in "${jobs[@]}"; do
+            echo "Running $job"
+            curl --fail --silent --show-error --retry 2 --max-time 240 \
+              -X POST \
+              -H "Authorization: Bearer ${CRON_SECRET}" \
+              "${APP_URL}/api/cron/${job}"
+            echo
+          done
