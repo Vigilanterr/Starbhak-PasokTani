@@ -314,6 +314,8 @@ Each row reads: *this database uses X to handle Y because Z.*
 
 ## 7. Migration checklist (things not expressed in DBML)
 
+This checklist is implemented in `database/migrations/0003`-`0005` (extensions in `0001`, partitioning and the search column in `0002`). See `database/README.md`.
+
 `dbml2sql` produces the tables, enums, FKs, unique and B-tree indexes and checks. Add the following by hand in the first migrations:
 
 ```sql
