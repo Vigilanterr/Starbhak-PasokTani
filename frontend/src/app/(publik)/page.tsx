@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { BagianKontak } from "./_beranda/bagian-kontak";
 import { HeroLanding } from "./_landing/hero";
-import { BagianKenapa } from "./_landing/kenapa";
-import { BagianLangkah } from "./_landing/langkah";
-import { BagianProdukPilihan } from "./_landing/produk-pilihan";
-import { BagianRancangan } from "./_landing/rancangan";
-import { BagianTestimoniLanding } from "./_landing/testimoni";
+import { BagianBaruDipanen } from "./_landing/baru-dipanen";
+import { BagianCabang } from "./_landing/cabang";
+import { BagianDaftarTunggu } from "./_landing/daftar-tunggu";
+import { BagianPembayaran } from "./_landing/pembayaran";
+import { BagianPengiriman } from "./_landing/pengiriman";
+import { BagianPetani } from "./_landing/petani";
 
 export const metadata: Metadata = {
   title: { absolute: "Pasok Tani · Menghubungkan hasil panen dengan kebutuhan pasar" },
@@ -17,12 +17,12 @@ export default function Landing() {
   return (
     <>
       <HeroLanding />
-      <BagianKenapa />
-      <BagianRancangan />
-      <BagianProdukPilihan />
-      <BagianLangkah />
-      <BagianTestimoniLanding />
-      <BagianKontak varian="landing" />
+      <BagianBaruDipanen />
+      <BagianPetani />
+      <BagianDaftarTunggu />
+      <BagianPembayaran />
+      <BagianPengiriman />
+      <BagianCabang />
     </>
   );
 }
