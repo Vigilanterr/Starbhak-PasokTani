@@ -22,12 +22,12 @@ type Props = {
 /** Satu tahap pada garis "jalur panen": nomor di garis putus-putus, lalu judul dan isinya. */
 export function Tahap({ id, nomor, eyebrow, judul, isi, latar, latarHex, awal, akhir, pinKuning, tautan, atas, children }: Props) {
   return (
-    <section aria-labelledby={id} className={latar}>
+    <section aria-labelledby={id} className={latar} data-tahap>
       {atas && <div className={KONTAINER}>{atas}</div>}
       <div className={`${KONTAINER} grid grid-cols-[36px_minmax(0,1fr)] gap-x-3.5 md:grid-cols-[64px_minmax(0,1fr)] md:gap-x-8`}>
         <div className="relative">
           {!awal && <span aria-hidden="true" className="absolute top-0 left-1/2 h-[66px] -translate-x-1/2 border-l-[3px] border-dashed border-[#c2a032]" />}
-          {!akhir && <span aria-hidden="true" className="absolute top-[66px] bottom-0 left-1/2 -translate-x-1/2 border-l-[3px] border-dashed border-[#c2a032]" />}
+          {!akhir && <span aria-hidden="true" className="jalur-bawah absolute top-[66px] bottom-0 left-1/2 -translate-x-1/2 border-l-[3px] border-dashed border-[#c2a032]" />}
           <span
             aria-hidden="true"
             style={{ boxShadow: `0 0 0 4px ${latarHex}` }}
