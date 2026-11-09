@@ -291,10 +291,24 @@ What is left:
 - `badges.criteria` is `{}` in the seed, so no badge is evaluated until an admin sets thresholds. `stock_always_updated`, `on_time_harvest` and `surplus_hero` depend on data outside `farmer_profiles` and have no evaluator yet.
 - `users.updated_at` moves on every presence flush, through the `set_updated_at` trigger. Do not read it as "profile last edited".
 
+### Phase 13: Rewire the Hono controllers onto the repo
+
+Decided 2026-11-09: rewire Hono in place (no Next.js move yet) and authenticate with the Neon Auth session. Source: `report.md` (8 of 47 endpoints pass; the rest still run schema v1 SQL).
+
+- [x] Step 1, auth foundation: session middleware (forward the `Cookie` header to Neon Auth `get-session`, then load `users` through the repo), lowercase roles, `uuidParam` validator, rewritten `/auth/register`, `/auth/login`, `/auth/me`. Remove `utils/jwt.ts`.
+- [ ] Step 2a: categories, products (repo: `catalog`)
+- [ ] Step 2b: farmers, achievements, reviews (repo: `farmers`, `feedback`)
+- [ ] Step 2c: orders (repo: `orders`, `carts`)
+- [ ] Step 2d: dashboard, admin (repo: `admin`, `identity`, `orders`), upload (`media_assets`)
+- [ ] Step 3: update `scripts/test-all-endpoints.ts` and `swagger.ts`; target 47/47 on `chore-schema-v2`
+- [ ] Step 4: delete `config/database.ts`, v1 types, `bcryptjs` and `jsonwebtoken`
+
+Commit one module at a time (`feat(api): ...`).
+
 ## Out of scope
 
 - Services, HTTP routes, and business rules such as fee calculation and penalties.
-- Rewiring or deleting the legacy Express/Hono code.
+- Moving the backend to Next.js route handlers. (Rewiring Hono is Phase 13.)
 - Translating English column names to the frontend's Indonesian types (`documentation.md` A8 puts that in the API layer).
 - Applying migrations to production. That needs the user.
 

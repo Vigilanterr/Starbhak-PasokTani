@@ -1,43 +1,41 @@
-import { authService } from './auth.service.js';
+import { authService, AuthError } from './auth.service.js';
 import { registerSchema, loginSchema } from './auth.schema.js';
 import { sendSuccess, sendError } from '../../utils/response.js';
 import type { Context } from 'hono';
+import type { AuthUser } from './auth.types.js';
+
+function fail(c: Context, error: unknown, fallback: string) {
+  if (error instanceof AuthError) return sendError(c, error.message, error.status);
+  if (error && typeof error === 'object' && 'issues' in error) return sendError(c, 'Invalid input', 400);
+  return sendError(c, error instanceof Error ? error.message : fallback, 400);
+}
 
 export const register = async (c: Context) => {
   try {
-    const body = await c.req.json();
-    const parsed = registerSchema.parse(body);
-    const result = await authService.register(parsed);
-    return sendSuccess(c, result, 'User registered successfully', 201);
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Registration failed';
-    return sendError(c, message, 400);
+    const parsed = registerSchema.parse(await c.req.json());
+    return sendSuccess(c, await authService.register(parsed), 'User registered successfully', 201);
+  } catch (error) {
+    return fail(c, error, 'Registration failed');
   }
 };
 
 export const login = async (c: Context) => {
   try {
-    const body = await c.req.json();
-    const parsed = loginSchema.parse(body);
-    const result = await authService.login(parsed);
-    return sendSuccess(c, result, 'Login successful');
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Login failed';
-    const statusCode = message.includes('suspended') ? 403 : 401;
-    return sendError(c, message, statusCode);
+    const parsed = loginSchema.parse(await c.req.json());
+    const { profile, setCookies } = await authService.login(parsed);
+    for (const cookie of setCookies) c.header('Set-Cookie', cookie, { append: true });
+    return sendSuccess(c, profile, 'Login successful');
+  } catch (error) {
+    return fail(c, error, 'Login failed');
   }
 };
 
 export const getMe = async (c: Context) => {
   try {
-    const user = c.get('user') as { userId: number } | undefined;
-    if (!user) {
-      return sendError(c, 'Unauthorized', 401);
-    }
-    const result = await authService.getCurrentUser(user.userId);
-    return sendSuccess(c, result, 'User profile retrieved');
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Failed to get user profile';
-    return sendError(c, message, error instanceof Error && error.message.includes('not found') ? 404 : 400);
+    const user = c.get('user') as AuthUser | undefined;
+    if (!user) return sendError(c, 'Unauthorized', 401);
+    return sendSuccess(c, await authService.getCurrentUser(user.userId), 'User profile retrieved');
+  } catch (error) {
+    return fail(c, error, 'Failed to get user profile');
   }
 };

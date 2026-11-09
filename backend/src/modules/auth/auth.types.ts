@@ -1,50 +1,24 @@
-export type UserRole = 'ADMIN' | 'FARMER' | 'BUYER';
-export type UserStatus = 'PENDING' | 'VERIFIED' | 'REJECTED' | 'SUSPENDED';
+import type { UserRole, UserStatus } from '../../repo/db.generated';
 
-export interface User {
-  id: number;
-  username: string;
-  full_name: string;
+/** Roles a person can pick at sign-up. Admins are seeded, never self-registered. */
+export type SignUpRole = Exclude<UserRole, 'admin'>;
+
+/** What the session middleware puts on the context. `role` is null until the profile row exists. */
+export interface AuthUser {
+  userId: string;
   email: string;
-  password: string;
-  phone: string;
-  role: UserRole;
-  status: UserStatus;
-  foto_profile: string | null;
-  address: string | null;
-  bio: string | null;
-  village: string | null;
-  farming_experience: string | null;
-  farm_area: string | null;
-  created_at: Date;
-  updated_at: Date;
+  name: string;
+  role: UserRole | null;
+  status: UserStatus | null;
 }
 
 export interface UserProfile {
-  id: number;
-  username: string;
-  fullName: string;
+  id: string;
   email: string;
-  phone: string;
+  fullName: string;
+  phone: string | null;
   role: UserRole;
   status: UserStatus;
-  fotoProfile: string | null;
-  address: string | null;
-  bio: string | null;
-  village: string | null;
-  farmingExperience: string | null;
-  farmArea: string | null;
-  createdAt: Date;
-}
-
-export interface AuthResponse {
-  token: string;
-  user: Omit<UserProfile, 'password'>;
-}
-
-export interface JwtPayload {
-  userId: number;
-  email: string;
-  role: UserRole;
-  fullName: string;
+  avatarMediaId: string | null;
+  onboardedAt: Date | null;
 }
