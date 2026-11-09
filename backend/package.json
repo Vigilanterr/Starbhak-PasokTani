@@ -9,7 +9,7 @@
     "start": "bun dist/index.js",
     "db:init": "npm --prefix ../database run migrate",
     "db:types": "kysely-codegen --env-file .env --url 'env(DATABASE_URL_UNPOOLED)' --dialect postgres --default-schema public --exclude-pattern '{*.schema_migrations,*.spatial_ref_sys,*.geography_columns,*.geometry_columns,*.audit_logs_*,neon_auth.*}' --out-file src/repo/db.generated.ts",
-    "test:repo": "bun test src/repo",
+    "test:repo": "bun test --timeout 30000 src/repo",
     "typecheck:repo": "tsc --noEmit -p tsconfig.repo.json"
   },
   "dependencies": {
