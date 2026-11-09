@@ -51,17 +51,17 @@ Each phase ends with passing tests and one commit. Do them in order, because lat
 
 ### Phase 0: Prepare and pull the env
 
-- [ ] Ask the user whether to commit their pending `backend/` changes first. `package.json` and `bun.lock` have uncommitted `@neon/*` additions, and the new dependencies touch the same files. `bun.lock` cannot be split cleanly.
-- [ ] Create git branch `feature/backend-repo` from `chore/neon-schema-v2`.
-- [ ] Choose the dev database. Use `chore-schema-v2` until production is migrated. Once it is, create `dev-backend-repo` from `production`, re-pull, and delete `chore-schema-v2` (the user has agreed to that).
-- [ ] Pull the env, always naming the branch. Without `--branch` this writes production URLs:
+- [x] Ask the user whether to commit their pending `backend/` changes first. `package.json` and `bun.lock` have uncommitted `@neon/*` additions, and the new dependencies touch the same files. `bun.lock` cannot be split cleanly.
+- [x] Create git branch `feature/backend-repo` from `chore/neon-schema-v2`.
+- [x] Choose the dev database. Use `chore-schema-v2` until production is migrated. Once it is, create `dev-backend-repo` from `production`, re-pull, and delete `chore-schema-v2` (the user has agreed to that).
+- [x] Pull the env, always naming the branch. Without `--branch` this writes production URLs:
 
   ```sh
   cd backend && neon env pull --branch chore-schema-v2 -s postgres -e NEON_BRANCH
   ```
 
   This updates only those Neon variables in the existing `.env` and keeps the other lines. `-s postgres` leaves the Neon Auth variables alone.
-- [ ] Verify without printing values: `NEON_BRANCH` names the dev branch, both database URLs are present, and the file has no `\r` line endings left on those lines.
+- [x] Verify without printing values: `NEON_BRANCH` names the dev branch, both database URLs are present, and the file has no `\r` line endings left on those lines.
 
 Done when: `.env` targets the dev branch and `select count(*) from regencies` returns 27 through it.
 
