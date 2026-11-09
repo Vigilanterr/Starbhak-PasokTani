@@ -83,7 +83,8 @@ export function FormDaftar({ peran }: { peran: "pembeli" | "petani" }) {
     });
     setMengirim(false);
 
-    if (hasil.ok) router.push("/masuk");
+    // Gerbang profil memutuskan tujuannya: profil sudah dibuat -> beranda, belum -> formulir.
+    if (hasil.ok) router.push("/daftar/lengkapi");
     else setGagal(true);
   }
 
