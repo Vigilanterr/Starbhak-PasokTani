@@ -229,6 +229,23 @@ Tables: `conversations`, `messages`, `notifications`, `outbox_events`.
 
 Key queries: keyset pagination on `messages (conversation_id, id)`, idempotent send through `client_message_id`, unread counts, and outbox claims with `FOR UPDATE SKIP LOCKED`.
 
+Checklist (file: `src/repo/comms/comms.repo.ts`, test: `comms.repo.test.ts`):
+- [x] Conversations: `getOrCreateConversation` (unique pair, conflict then follow-up select) and `findConversationForParty`. Test: one conversation per pair. Test: only a party sees it.
+- [x] Conversation list: `listConversationsForUser`, keyset on `(coalesce(last_message_at, created_at), id)`, limit + 1. Test: newest activity first, pages do not overlap, a stranger gets none.
+- [x] Read marker: `markConversationRead` moves only the caller's side, in one statement. Test: the other side is kept. Test: a stranger gets undefined.
+- [x] Send: `insertMessage` (requires a transaction; party check in the `INSERT ... SELECT`; `ON CONFLICT (sender_id, client_message_id)` replay returns the stored row with `created: false`; moves `last_message_at`). Test: `last_message_at` matches the message time. Test: a stranger writes nothing. Test: a replay returns the stored row. Test: `chk_message_content` fails as a typed error. Test: outside a transaction throws.
+- [x] Catch-up: `listMessagesAfter` (`id > cursor`, ascending, for the SSE `Last-Event-ID` path). Test: only what is after the cursor, oldest first. Test: a stranger reads nothing.
+- [x] History: `listMessagesBefore` (newest first, limit + 1). Test: pages do not overlap. Test: a stranger gets an empty page.
+- [x] Unread: `countUnreadMessages` (other party's messages after that side's marker). Test: own messages are skipped, and a read marker clears the count. Messages are backdated in the test, because rows written in one transaction share `now()`.
+- [x] Notifications: `insertNotifications` (one statement, empty list returns early), `listNotificationsForUser` (keyset on `(created_at, id)`), `countUnreadNotifications` (partial index). Test: newest first with non-overlapping pages, and only the owner's rows. Test: the badge count.
+- [x] Mark read: `markNotificationsRead` (owner and unread only) and `markAllNotificationsRead`. Test: another user's id is skipped. Test: badge goes to zero.
+- [x] Web push: `markNotificationsPushed` (only unpushed rows). Test: recorded once.
+- [x] Outbox write: `insertOutboxEvent` (requires a transaction, so an event cannot commit alone). Test: outside a transaction throws.
+- [x] Outbox claim: `claimOutboxEvents`, one statement with `FOR UPDATE SKIP LOCKED` on `processed_at IS NULL` and `available_at <= now()`. The claim pushes `available_at` forward as a lease and counts the attempt, so no transaction is held during Redis or push calls. Test: a claimed event is hidden by the lease, and a processed one never returns.
+- [x] Outbox outcome: `markOutboxProcessed` (once) and `markOutboxFailed` (stores `last_error`, retries later). Test: the error stays on the row, and the event is not claimed again before its retry time.
+- [x] `EXPLAIN` on the dev branch with seq scan off: catch-up and history use `messages_conversation_id_id_idx`, the notification list uses `notifications_user_id_created_at_idx`, the badge uses `notifications_unread`, the outbox claim uses `outbox_events_unprocessed`, and the conversation list uses the buyer and farmer indexes.
+- [x] `bun run test:repo` (19 new tests, all pass) and `bun run typecheck:repo` pass.
+
 Commit: `feat(repo): add chat and notification queries`
 
 ### Phase 11: Analytics, audit, settings
