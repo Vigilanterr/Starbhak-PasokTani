@@ -203,6 +203,24 @@ Commit: `feat(repo): add payment and ledger queries`
 
 Tables: `reviews`, `review_photos`, `complaints`, `complaint_evidence`, `complaint_messages`, `reports`.
 
+Checklist (file: `src/repo/feedback/feedback.repo.ts`, test: `feedback.repo.test.ts`):
+- [x] Review: `insertReview` copies product and farmer from the order item, with the buyer filter in the same `INSERT … SELECT`, and `DO NOTHING` on a replay. Test: fields are copied and the product rating moves. Test: another buyer writes nothing. Test: a second review of the same item changes nothing. Test: rating 6 fails with `chk_rating`.
+- [x] Lists: `listPublishedReviewsForProduct` and `listPublishedReviewsForFarmer` (keyset, hidden reviews left out). Test: newest first, pages do not overlap, a hidden review drops out.
+- [x] Moderation: `setReviewModeration` (guarded). Test: the rating follows the published reviews through the trigger. Test: a stale `from` returns undefined.
+- [x] Reply: `replyToReview` (farmer only, once). Test: another farmer gets nothing, and a second reply changes nothing.
+- [x] Photos: `insertReviewPhotos` (one statement, keeps the given order, drops assets the buyer does not own, empty list returns early) and `listPhotosForReviews`. Test: positions follow the list, and a foreign asset is dropped.
+- [x] Complaints: `openComplaint` (owner filter in the insert), `findComplaintForParty` (buyer, farmer of the order, or assigned mediator). Test: another buyer gets nothing. Test: a stranger sees nothing, and each party sees it.
+- [x] Complaint lists: `listComplaintsForBuyer`, `listComplaintsForFarmer` (newest first), `listComplaintQueue` (admin, oldest first, status filter). Test: lists and queue order.
+- [x] Status: `setComplaintStatus` (guarded, sets mediator and resolution, `resolved_at` on a terminal state). Test: a stale `from` returns undefined.
+- [x] Thread: `insertComplaintMessage` (only a party can post, checked in the insert) and `listComplaintMessages` (only a party reads, oldest first, keyset). Test: a stranger's post writes nothing and a stranger reads an empty list.
+- [x] Reports: `insertReport` (exclusive arc; zero and two targets fail with `chk_report_target`), `setReportStatus` (guarded, `handled_at` only when closed), `listReportQueue` (oldest first). Test: each case.
+- [x] `EXPLAIN` on the dev branch with seq scan off: the review list uses `reviews_product_id_created_at_idx`, buyer complaints use `complaints_buyer_id_idx`, the admin queue uses `complaints_status_opened_at_idx`, the thread uses `complaint_messages_complaint_id_created_at_idx`, and the report queue uses `reports_status_created_at_idx`.
+- [x] `bun run test:repo` (171 pass) and `bun run typecheck:repo` pass.
+
+Open gaps (need a decision, not fixed here):
+- Nothing stops two active complaints on one order. The schema has no index for it. A partial unique index on `complaints (order_id)` for the active statuses would close it, but that is a migration.
+- `insertReview` does not check that the order is completed. The spec puts that in the service, as the schema comment says.
+
 Commit: `feat(repo): add review and complaint queries`
 
 ### Phase 10: Chat and notifications
