@@ -254,6 +254,18 @@ Tables: `product_daily_stats`, `audit_logs`, `platform_settings`.
 
 Key queries: the daily stats upsert, admin statistics, audit lookup by entity, and counter reconciliation for the nightly job.
 
+Checklist (file: `src/repo/admin/admin.repo.ts`, test: `admin.repo.test.ts`):
+- [x] Redis flush: `flushProductDayCounters` writes `views` and `add_to_carts` as absolute day totals (upsert on `(product_id, day)`). Test: a second flush replaces the value, and an empty list writes nothing.
+- [x] Sales rollup: `rollupSalesForDay` (requires a transaction) recomputes `purchases`, `units_sold` and `revenue` for one Jakarta day from paid order items only. Test: awaiting payment is left out. Test: a cancelled order drops out on rerun. Test: outside a transaction it throws. Views are untouched.
+- [x] Subscriptions rollup: `rollupSubscriptionsForDay` (requires a transaction). Test: counts the day's new subscriptions.
+- [x] Farmer funnel: `listProductDailyStatsForFarmer` (owner-scoped) and `rankProductsBySales` (best or slow sellers, products with no sales included). Test: another farmer gets nothing. Test: ranking order.
+- [x] Admin overview: `findAdminOverview` returns GMV, paid order count, active users, escrow balance, and harvest status changes with delayed ones. Test: the figures move by exactly the new order and the new delay (before and after compared, so other data does not matter).
+- [x] Counter reconciliation: `findCounterDrift` is read only, with `limit`, and checks every cached counter against its source. Test: fresh data shows no drift. Test: completing an order without `completeOrder` shows drift on `sold_qty` and `completed_order_count`.
+- [x] Audit: `listAuditLogsForEntity` (newest first, keyset on `(created_at, id)`, limit + 1). Test: a price change is audited with the actor and old and new values. Test: pages do not overlap when two rows share a timestamp. Test: a fee version insert is audited.
+- [x] Settings: `findPlatformSetting`, `listPlatformSettings` and `upsertPlatformSetting` (JSON value, one row per key). Test: an upsert replaces the value. Test: an unknown key returns undefined.
+- [x] `EXPLAIN` on the dev branch with seq scan off: the audit lookup uses each partition's `(entity_type, entity_id, created_at)` index, merged in order, and the farmer funnel uses `product_daily_stats_pkey`.
+- [x] `bun run test:repo` and `bun run typecheck:repo` pass.
+
 Commit: `feat(repo): add analytics and admin queries`
 
 ### Phase 12: Coverage and handoff
