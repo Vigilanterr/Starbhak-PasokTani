@@ -1,66 +1,106 @@
-import { neonAuth, signUpWithEmail } from '../../lib/neon-auth.js';
-import { getDb } from '../../repo/db';
-import { withTransaction } from '../../repo/executor';
-import { ensureUser, findUserWithEmail } from '../../repo/identity/identity.repo';
-import type { RegisterInput, LoginInput } from './auth.schema.js';
-import type { UserProfile } from './auth.types.js';
-
-export class AuthError extends Error {
-  constructor(message: string, readonly status: 400 | 401 | 403 | 404 | 409 = 400) {
-    super(message);
-  }
-}
+import bcryptjs from 'bcryptjs';
+import { query } from '../../config/database.js';
+import { generateToken } from '../../utils/jwt.js';
+import { RegisterInput, LoginInput } from './auth.schema.js';
+import type { User, AuthResponse, UserProfile } from './auth.types.js';
 
 export const authService = {
-  /** Creates the Neon Auth account, then the app profile row for it. */
-  async register(data: RegisterInput): Promise<UserProfile> {
-    const up = await signUpWithEmail(data.email, data.password, data.fullName);
-    if (up.error || !up.data?.user) {
-      throw new AuthError(up.error?.message ?? 'Registration failed', 400);
+  async register(data: RegisterInput): Promise<Omit<User, 'password'>> {
+    const existingUser = await query('SELECT id FROM users WHERE email = $1', [data.email]);
+
+    if (existingUser.rows.length > 0) {
+      throw new Error('Email already registered');
     }
-    const id = up.data.user.id;
-    await withTransaction(getDb(), (trx) =>
-      ensureUser(trx, { id, fullName: data.fullName, role: data.role, phone: data.phone ?? null }),
+
+    const hashedPassword = await bcryptjs.hash(data.password, 10);
+
+    const result = await query(
+      `INSERT INTO users (username, full_name, email, password, phone, role, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, email, role, status, username, full_name, phone`,
+      [data.username, data.fullName, data.email, hashedPassword, data.phone, data.role, 'PENDING']
     );
-    return authService.getCurrentUser(id);
+
+    const user = result.rows[0] as Omit<User, 'password'>;
+    return user;
   },
 
-  /** Signs in through Neon Auth. Returns the cookies to hand to the client. */
-  async login(data: LoginInput): Promise<{ profile: UserProfile | null; setCookies: string[] }> {
-    let setCookies: string[] = [];
-    const res = await neonAuth.signIn.email({
-      email: data.email,
-      password: data.password,
-      fetchOptions: {
-        headers: { Origin: process.env.FRONTEND_URL ?? 'http://localhost:3000' },
-        onSuccess: (ctx: { response: Response }) => {
-          setCookies = ctx.response.headers.getSetCookie();
-        },
-      },
+  async login(data: LoginInput): Promise<AuthResponse> {
+    const result = await query(
+      'SELECT id, email, password, role, status, full_name, username, phone FROM users WHERE email = $1',
+      [data.email]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Invalid email or password');
+    }
+
+    const user = result.rows[0] as User;
+
+    if (user.status === 'SUSPENDED') {
+      throw new Error('Account is suspended');
+    }
+
+    const isPasswordValid = await bcryptjs.compare(data.password, user.password);
+    if (!isPasswordValid) {
+      throw new Error('Invalid email or password');
+    }
+
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      fullName: user.full_name,
     });
-    if (res.error || !res.data?.user) throw new AuthError('Invalid email or password', 401);
 
-    const profile = await findUserWithEmail(getDb(), res.data.user.id);
-    if (profile?.status === 'suspended') throw new AuthError('Account is suspended', 403);
-    return { profile: profile ? toProfile(profile) : null, setCookies };
+    const userProfile: UserProfile = {
+      id: user.id,
+      username: user.username,
+      fullName: user.full_name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      status: user.status,
+      fotoProfile: user.foto_profile,
+      address: user.address,
+      bio: user.bio,
+      village: user.village,
+      farmingExperience: user.farming_experience,
+      farmArea: user.farm_area,
+      createdAt: user.created_at,
+    };
+
+    return { token, user: userProfile };
   },
 
-  async getCurrentUser(userId: string): Promise<UserProfile> {
-    const row = await findUserWithEmail(getDb(), userId);
-    if (!row) throw new AuthError('User not found', 404);
-    return toProfile(row);
+  async getCurrentUser(userId: number): Promise<UserProfile> {
+    const result = await query(
+      `SELECT id, username, full_name, email, phone, role, status, foto_profile, 
+              address, bio, village, farming_experience, farm_area, created_at
+       FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('User not found');
+    }
+
+    const row = result.rows[0] as Omit<User, 'password'>;
+    return {
+      id: row.id,
+      username: row.username,
+      fullName: row.full_name,
+      email: row.email,
+      phone: row.phone,
+      role: row.role,
+      status: row.status,
+      fotoProfile: row.foto_profile,
+      address: row.address,
+      bio: row.bio,
+      village: row.village,
+      farmingExperience: row.farming_experience,
+      farmArea: row.farm_area,
+      createdAt: row.created_at,
+    };
   },
 };
-
-function toProfile(row: NonNullable<Awaited<ReturnType<typeof findUserWithEmail>>>): UserProfile {
-  return {
-    id: row.id,
-    email: row.email,
-    fullName: row.full_name,
-    phone: row.phone,
-    role: row.role,
-    status: row.status,
-    avatarMediaId: row.avatar_media_id,
-    onboardedAt: row.onboarded_at,
-  };
-}
