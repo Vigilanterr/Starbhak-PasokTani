@@ -70,11 +70,16 @@ export async function masuk(input: {
   email: string;
   kataSandi: string;
 }): Promise<Hasil> {
-  const { error } = await authClient.signIn.email({
-    email: input.email,
-    password: input.kataSandi,
-  });
-  return error ? { ok: false } : { ok: true };
+  // Dibungkus try: bila Neon Auth melempar error (bukan mengembalikannya), form tetap bisa dikirim ulang.
+  try {
+    const { error } = await authClient.signIn.email({
+      email: input.email,
+      password: input.kataSandi,
+    });
+    return error ? { ok: false } : { ok: true };
+  } catch {
+    return { ok: false };
+  }
 }
 
 /** Mulai alur OAuth Google (Neon Auth). Browser dialihkan ke Google lalu kembali ke beranda. */
@@ -100,12 +105,17 @@ export async function daftar(input: {
   wilayah?: string;
   kecamatan?: string;
 }): Promise<Hasil> {
-  const { error } = await authClient.signUp.email({
-    name: input.nama,
-    email: input.email,
-    password: input.kataSandi,
-  });
-  if (error) return { ok: false };
+  // Dibungkus try: tombol "Buat akun" tidak boleh macet dalam status mengirim bila Neon Auth melempar error.
+  try {
+    const { error } = await authClient.signUp.email({
+      name: input.nama,
+      email: input.email,
+      password: input.kataSandi,
+    });
+    if (error) return { ok: false };
+  } catch {
+    return { ok: false };
+  }
 
   await lengkapiProfil({
     peran: input.peran,
