@@ -158,7 +158,7 @@ Commit: `refactor(api)!: remove the schema v1 API and deploy the new skeleton`
 - [x] Frontend: wire `masuk()` to `authClient.signIn.email`, and send the role and shop fields that `daftar()` currently drops by calling `POST /me/onboarding` after sign-up. Sign-in now goes through the gate page first. Uncommitted: it sits on the existing Neon Auth wiring in `auth-api.ts`, which is not yet committed.
 - [x] Frontend: `/daftar/lengkapi`, a gate page for anyone signed in without a profile (Google sign-ins, or sign-up that had no session yet). Onboarded accounts go straight to `?lanjut=` or `/`.
 - [x] Frontend: `src/proxy.ts` for early redirects from the cookie: guests off the auth pages, signed-out users off `/daftar/lengkapi`. The role check in each group's layout comes with the `(pembeli)` and `(petani)` groups in Phase 4. Read from `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`.
-- [ ] Add the Vercel preview and production domains to Neon Auth trusted domains, on both branches. **Needs the user:** the preview domain is not known until the deploy.
+- [x] Add the Vercel preview and production domains to Neon Auth trusted domains, on both branches. Recorded in `b985527`.
 - [ ] One real-session test built from `test-neon-signup.ts`, on the dev branch only. Not written: that script imports `src/lib/neon-auth.js`, which Phase 1 deleted, and each run creates a real account on the dev auth.
 
 Done when: a browser sign-up on a preview deployment reaches `GET /api/v1/me` with the right role.
@@ -168,19 +168,28 @@ Commit: `feat(api): add Neon Auth session and onboarding`
 
 Replaces the mock in `katalog.ts`, function by function.
 
-- [ ] NEW read models, as single queries with no per-row loops: `listCatalogCards` (farmer summary, category, active batch dates, surplus, effective price; filters for category, regency, organic, surplus, in stock, price range, radius; the sort orders in `UrutanProduk`; page and count) and `findProductDetail`.
-- [ ] NEW `listFarmerDirectory`, `findFarmerPublic`, `listWaitlistsPublic`, and home sections.
-- [ ] `GET /categories`, `/categories/:slug`, `/regions`, `/regions/:slug/districts`.
-- [ ] `GET /products`, `/products/:slug`, `/products/:id/related`, `/products/:id/reviews`, and `GET /search` (`searchProducts`, returning `dimaknai` and `saran`).
-- [ ] `GET /farmers`, `/farmers/:id`, `/farmers/:id/products`, `/farmers/:id/reviews`.
-- [ ] `GET /waitlists`, `/waitlists/:id` (`listWaitlistTimeline`, `listMediaForEvents`). `GET /home`.
-- [ ] Mappers and enum tables: status, unit, tag, badge. Test that every enum value maps.
-- [ ] Surplus price: a pure function with unit tests for tiers, the price floor and `sisaHari` on the Jakarta date.
-- [ ] Seed demo data with a script, on the dev branch by default. It refuses `production` unless given an explicit flag. Use the images already in `frontend/public/images`, so media uploads can wait.
-- [ ] Replace each `katalog.ts` body with `fetch` through one helper (`BACKEND_INTERNAL_URL` on the server, relative in the browser).
-- [ ] Remove `generateStaticParams` from `produk/[slug]`, `petani/[id]`, `kategori/[slug]` and `daftar-tunggu/[id]`. Because `cacheComponents` is on, add Suspense boundaries and keep every fetch behind a runtime boundary, with `'use cache'` for public reads.
+- [x] NEW read models, as single queries with no per-row loops: `listCatalogCards` (farmer summary, category, active batch dates, surplus, effective price; filters for category, regency, organic, surplus, in stock, price range, radius; the sort orders in `UrutanProduk`; page and count) and `findProductDetail`. Built as `findCatalogCardBySlug`. Price sort and filter use the base price, not the Surplus price. Repo tests: `catalog-read.repo.test.ts`, 15 pass.
+- [x] NEW `listFarmerDirectory`, `findFarmerPublic`, `listWaitlistsPublic`, and home sections. Built as `listWaitlistCards`, `countPublicStats`, and the home queries in `catalog.service.ts`.
+- [x] `GET /categories`, `/categories/:slug`, `/regions`, `/regions/:slug/districts`.
+- [x] `GET /products`, `/products/:slug`, `/products/:id/related`, `/products/:id/reviews`, and `GET /search` (`searchProducts`, returning `dimaknai` and `saran`).
+- [x] `GET /farmers`, `/farmers/:id`, `/farmers/:id/products`, `/farmers/:id/reviews`. Also `/farmers/:id/waitlists`. The directory is paged; the frontend asks for one page of up to 60.
+- [x] `GET /waitlists`, `/waitlists/:id` (`listWaitlistTimeline`, and `listPublicEventMedia` for photos, which adds the public id). `GET /home`.
+- [x] Mappers and enum tables: status, unit, tag, badge. Test that every enum value maps (`catalog-mappers.test.ts`).
+- [x] Surplus price: a pure function with unit tests for tiers, the price floor and `sisaHari` on the Jakarta date (`surplus.test.ts`, 33 unit tests pass with the mapper tests).
+- [x] Seed demo data with a script, on the dev branch by default (`bun run seed:katalog`). It refuses `production` with no flag at all. Ran once on the dev branch: 12 farmers, 36 products, 10 wait lists. **Not seeded:** photos (the images are untracked in the main worktree, so they are not in this branch) and reviews (they need order items, Phase 5). **Side effect:** the seed used every unlinked `neon_auth.user`, so the repo tests now fail (see the open item below).
+- [x] Replace each `katalog.ts` body with `fetch` through one helper (`BACKEND_INTERNAL_URL` on the server). Reads are uncached, not `'use cache'`: a cached read runs during the static pass and calls the backend at build time. `connection()` in the helper defers the call to request time. No browser calls exist yet.
+- [x] Remove `generateStaticParams` from `produk/[slug]`, `petani/[id]`, `kategori/[slug]` and `daftar-tunggu/[id]`. The data-reading parts of those pages and the home page sit behind `Suspense`.
 
-Done when: every public page renders from the API on a preview deployment, with no import from `src/data/*.json`, and `next build` makes no API call.
+**Open, before this phase is done:**
+
+- [x] **Repo test isolation.** Decided: the demo catalog lives on its own branch, `catalog-demo` (`br-blue-unit-azqc7l2y`), copied from `chore-schema-v2` with the seed in it. `chore-schema-v2` was restored in place to 2026-11-09 17:00 UTC, which dropped only the seed. The pre-restore state is kept as `chore-schema-v2-seeded-backup` (`br-cold-recipe-azj3rhvh`). `bun run test:repo` on `chore-schema-v2` now gives 238 pass, 0 fail.
+- [x] **Live tests.** `scripts/test-api.sh` restores `api-test` from the head of `chore-schema-v2` (`neon branches reset --parent` brought the seed back, so it is no longer used). It runs the route and onboarding tests, 92 pass. `scripts/test-katalog-live.sh` restores `api-test-demo` from `catalog-demo` and runs the catalog live tests, 9 pass. Both are throwaway branches. `me.live.test.ts` now picks only auth users with no `users` row. That was a fixture bug, not caused by the seed.
+- [x] `frontend/src/data/beranda.json` is no longer imported. Its copy moved to `_beranda/konten-beranda.ts`. The seed script still reads the other catalog JSON, which is fine.
+- [ ] **Preview deployment (open, needs you).** `catalog-demo` needs its own `DATABASE_URL` and `NEON_AUTH_BASE_URL` in the Vercel preview env, and the preview domain needs to be a trusted domain on that branch's auth. I have not deployed.
+- [x] Not-found pages (`/produk/<unknown>`) print the 404 UI but still return HTTP 200. Accepted. The `notFound()` call is inside the streamed Suspense boundary, and fixing that would require a blocking route, which would call the backend at build.
+- [x] Category slugs follow the database (`sayur`, `beras-padi`), not the mock (`sayuran`, `bumbu-rempah`, `beras-biji`). The seed maps the mock names to the database names. Accepted.
+
+Done when: every public page renders from the API on a preview deployment, with no import from `src/data/*.json`, and `next build` makes no API call. `next build` passes with no backend call at build time, and no page imports `src/data/*.json`. The preview deployment is the one condition still open.
 Commit: `feat(api): serve the public catalog from the repo`
 
 ### Phase 4: Buyer account and carts

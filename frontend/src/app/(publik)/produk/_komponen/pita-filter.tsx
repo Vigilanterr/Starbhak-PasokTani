@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { FilterProduk } from "@/lib/api/tipe";
-import { TITIK_DEFAULT } from "@/lib/api/katalog";
+import { TITIK_DEFAULT } from "@/lib/api/bersama";
 import { hrefFilter } from "@/lib/filter-produk";
 import { angka } from "@/lib/format";
 import { IkonDekatSaya, IkonSilang } from "@/app/_komponen/ikon";

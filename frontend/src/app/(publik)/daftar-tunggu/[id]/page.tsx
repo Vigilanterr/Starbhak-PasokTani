@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { DaftarTungguTampil } from "@/lib/api/tipe";
-import { ambilDaftarTunggu, ambilDaftarTungguById, ambilPetaniById, ambilSemuaIdDaftarTunggu } from "@/lib/api/katalog";
+import { ambilDaftarTunggu, ambilDaftarTungguById, ambilPetaniById } from "@/lib/api/katalog";
 import { angka, hargaPerSatuan, labelJadwalPanen, LABEL_SATUAN, tanggal } from "@/lib/format";
 import { ChipStatus } from "@/app/(publik)/_komponen/chip-status";
 import { FotoKomoditas } from "@/app/(publik)/_komponen/foto-komoditas";
@@ -16,11 +17,6 @@ import { KartuPetaniDaftar } from "../_komponen/kartu-petani-daftar";
 import { Linimasa } from "../_komponen/linimasa";
 import { PanelKomitmen } from "../_komponen/panel-komitmen";
 import { ProgresStatus } from "../_komponen/progres-status";
-
-export async function generateStaticParams() {
-  const id = await ambilSemuaIdDaftarTunggu();
-  return id.map((x) => ({ id: x }));
-}
 
 export async function generateMetadata({ params }: PageProps<"/daftar-tunggu/[id]">): Promise<Metadata> {
   const { id } = await params;
@@ -44,7 +40,15 @@ async function ambilLainnya(d: DaftarTungguTampil, jumlah = 4): Promise<DaftarTu
   return hasil.slice(0, jumlah);
 }
 
-export default async function Page({ params }: PageProps<"/daftar-tunggu/[id]">) {
+export default function Page(props: PageProps<"/daftar-tunggu/[id]">) {
+  return (
+    <Suspense fallback={<div aria-busy="true" className="min-h-[60vh]" />}>
+      <IsiHalaman {...props} />
+    </Suspense>
+  );
+}
+
+async function IsiHalaman({ params }: PageProps<"/daftar-tunggu/[id]">) {
   const { id } = await params;
   const d = await ambilDaftarTungguById(id);
   if (!d) notFound();

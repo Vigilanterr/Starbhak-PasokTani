@@ -19,7 +19,11 @@ let regencyB: { code: string; slug: string };
 
 beforeAll(async () => {
   if (!db) return;
-  ids = (await db.selectFrom('neon_auth.user').select('id').orderBy('id').execute()).map((r) => r.id);
+  // Only auth users with no users row yet: the onboarding tests need a fresh person each, and a row left by an
+  // earlier run would make them fail.
+  ids = (await db.selectFrom('neon_auth.user').select('id')
+    .where('id', 'not in', (eb) => eb.selectFrom('users').select('id'))
+    .orderBy('id').execute()).map((r) => r.id);
   const [a, b] = await listRegencies(db, 2);
   regencyA = a!;
   regencyB = b!;

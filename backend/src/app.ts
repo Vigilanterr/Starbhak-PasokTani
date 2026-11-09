@@ -5,6 +5,7 @@ import { requestId } from './middleware/request-id';
 import { cronRoutes } from './routes/cron';
 import { healthRoutes } from './routes/health';
 import { meRoutes } from './routes/me';
+import { publicRoutes } from './routes';
 import type { SessionLookup } from './lib/session';
 import type { Executor } from './repo/executor';
 import type { AppBindings, Env } from './types/env';
@@ -26,6 +27,7 @@ export function createApp(deps: AppDeps) {
   app.use('/api/v1/*', originCheck);
 
   app.route('/api/v1', healthRoutes(deps.db));
+  app.route('/api/v1', publicRoutes(deps.db));
   app.route('/api/v1/me', meRoutes(deps));
   app.route('/api/cron', cronRoutes(deps));
 

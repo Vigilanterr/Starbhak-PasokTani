@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import {
   ambilPetaniById,
   ambilProdukBySlug,
   ambilProdukTerkait,
-  ambilSemuaSlugProduk,
   ambilUlasanProduk,
 } from "@/lib/api/katalog";
 import { angka, LABEL_SATUAN, rupiah } from "@/lib/format";
@@ -22,10 +22,6 @@ import { KartuPetaniProduk } from "./_komponen/kartu-petani-produk";
 import { KotakBeli } from "./_komponen/kotak-beli";
 import { PenyediaBeli } from "./_komponen/penyedia-beli";
 
-export async function generateStaticParams() {
-  return (await ambilSemuaSlugProduk()).map((slug) => ({ slug }));
-}
-
 export async function generateMetadata({ params }: PageProps<"/produk/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const p = await ambilProdukBySlug(slug);
@@ -36,7 +32,15 @@ export async function generateMetadata({ params }: PageProps<"/produk/[slug]">):
   };
 }
 
-export default async function Page({ params }: PageProps<"/produk/[slug]">) {
+export default function Page(props: PageProps<"/produk/[slug]">) {
+  return (
+    <Suspense fallback={<div aria-busy="true" className="min-h-[60vh]" />}>
+      <IsiHalaman {...props} />
+    </Suspense>
+  );
+}
+
+async function IsiHalaman({ params }: PageProps<"/produk/[slug]">) {
   const { slug } = await params;
   const produk = await ambilProdukBySlug(slug);
   if (!produk) notFound();

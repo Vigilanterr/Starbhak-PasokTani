@@ -20,7 +20,7 @@ function IkonKutip(p: SVGProps<SVGSVGElement>) {
 
 /**
  * `#testimoni`.
- * TODO: testimoni di `src/data/beranda.json` masih CONTOH (`contoh: true`); ganti dengan ulasan asli pengguna
+ * TODO: testimoni di `konten-beranda.ts` masih CONTOH (`contoh: true`); ganti dengan ulasan asli pengguna
  * (mis. dari API ulasan terpilih) sebelum peluncuran.
  */
 export function BagianTestimoni() {

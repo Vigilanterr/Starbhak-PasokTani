@@ -2,7 +2,7 @@
  * Tipe data katalog publik.
  *
  * Bentuknya meniru respons API backend (belum ada). Untuk sementara datanya dibaca
- * dari `src/data/*.json` lewat fungsi di `src/lib/api/katalog.ts`.
+ * dari backend lewat fungsi di `src/lib/api/katalog.ts`.
  * Semua tanggal berformat ISO `YYYY-MM-DD`; semua harga dalam Rupiah (bilangan bulat).
  */
 

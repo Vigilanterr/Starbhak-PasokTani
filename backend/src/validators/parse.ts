@@ -22,3 +22,21 @@ export async function parseBody<T extends ZodTypeAny>(c: Context, schema: T): Pr
   }
   return parsed.data;
 }
+
+/** Reads and validates query-string parameters. Same 400 shape as parseBody. */
+export function parseQuery<T extends ZodTypeAny>(c: Context, schema: T): z.infer<T> {
+  const parsed = schema.safeParse(c.req.query());
+  if (!parsed.success) {
+    throw new AppError(400, 'validation_failed', 'Parameter tidak valid', issuesToFields(parsed.error.issues));
+  }
+  return parsed.data;
+}
+
+/** Validates one path parameter, such as a uuid. A bad id is a 400, never a query. */
+export function parseParam<T extends ZodTypeAny>(value: string, schema: T, nama: string): z.infer<T> {
+  const parsed = schema.safeParse(value);
+  if (!parsed.success) {
+    throw new AppError(400, 'validation_failed', `${nama} tidak valid`, { [nama]: 'Format tidak valid' });
+  }
+  return parsed.data;
+}

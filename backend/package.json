@@ -11,6 +11,8 @@
     "db:types": "kysely-codegen --env-file .env --url 'env(DATABASE_URL_UNPOOLED)' --dialect postgres --default-schema public --exclude-pattern '{*.schema_migrations,*.spatial_ref_sys,*.geography_columns,*.geometry_columns,*.audit_logs_*,neon_auth.*}' --out-file src/repo/db.generated.ts",
     "test:repo": "bun test --timeout 30000 src/repo",
     "test:api": "bash scripts/test-api.sh",
+    "test:katalog-live": "bash scripts/test-katalog-live.sh",
+    "seed:katalog": "bun run scripts/seed-katalog.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "typecheck:repo": "tsc --noEmit -p tsconfig.repo.json"
   },

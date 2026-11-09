@@ -66,3 +66,14 @@ describe('layer rules', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe('demo writes stay out of the API', () => {
+  test('only the seed script imports src/repo/demo', () => {
+    const offenders = filesUnder(SRC)
+      .filter((f) => !inside(f, join('repo', 'demo')))
+      .filter((f) => importsOf(f).some((spec) => /repo\/demo\//.test(spec)))
+      .map(relPath);
+    expect(offenders).toEqual([]);
+  });
+
+});
