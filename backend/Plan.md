@@ -184,6 +184,18 @@ Tables: `payments`, `payment_webhook_events`, `ledger_accounts`, `ledger_transac
 
 Key queries: payment creation by `idempotency_key`, webhook inbox insert where a replay is a no-op, one `postLedgerTransaction` function that writes the transaction and all entries, wallet history, escrow release candidates, refunds and payouts.
 
+Checklist (file: `src/repo/payments/payments.repo.ts`, test: `payments.repo.test.ts`):
+- [x] Payments: `createPayment` (replay of `idempotency_key` returns the stored row with `created: false`; another payer's key returns undefined). Test: same key, same row. Test: another payer's key gives undefined. Test: no target fails with `chk_payment_target`. `findPaymentForPayer` (owner-scoped) and `setPaymentStatus` (guarded, `paid_at` set by `now()`). Test: pending to paid once, and a late repeat changes nothing.
+- [x] Webhook inbox: `recordWebhookEvent` (`ON CONFLICT DO NOTHING`), `markWebhookProcessed` (first call only), `markWebhookFailed` (keeps the row for a retry). Test: a replay writes one row and processes once. Test: a failed run records the error and leaves `processed_at` empty.
+- [x] Ledger accounts: `getOrCreateLedgerAccount` and `findLedgerAccount`, with a null owner for system accounts (NULLS NOT DISTINCT). Test: the same system account on every call.
+- [x] Postings: `postLedgerTransaction` (requires a transaction; one multi-row entry insert; replay returns undefined and writes nothing; empty entries throw). Test: a balanced posting moves both balances at commit and not before. Test: an unbalanced posting fails at commit with `CheckViolationError` matching `/unbalanced/`. Test: a replayed idempotency key moves the balance once. Test: outside a transaction throws.
+- [x] Wallet history: `listWalletHistory` (owner-scoped, keyset on `(created_at, id)` desc, limit + 1). Test: pages do not overlap, and another owner sees nothing.
+- [x] Escrow: `lockEscrowReleaseCandidates` (held, past `auto_release_at`, unconfirmed, `FOR UPDATE SKIP LOCKED`, partial index predicate repeated) and `setEscrowStatus` (guarded). Test: disputed, not-yet-due and confirmed orders are left out. Test: held to released once.
+- [x] Refunds: `insertRefund` and `setRefundStatus` (guarded, `completed_at` on completion). Test: no target fails with `chk_refund_target`. Test: completes once.
+- [x] Payouts: `insertPayout` and `setPayoutStatus` (guarded, `provider_ref` and `failure_reason` optional, `completed_at` on completion). Test: zero amount fails with `chk_payout_amount`. Test: requested, processing, completed, and a stale step writes nothing.
+- [x] `EXPLAIN` on the dev branch: wallet history uses `ledger_entries_account_id_created_at_idx`, escrow candidates use `shipments_auto_release`, and the webhook dedupe uses `payment_webhook_events_provider_provider_event_id_idx`.
+- [x] `bun run test:repo` (153 pass) and `bun run typecheck:repo` pass.
+
 Done also requires tests that an unbalanced transaction fails at commit with a typed error, that balances move, and that replaying a webhook changes nothing.
 Commit: `feat(repo): add payment and ledger queries`
 
