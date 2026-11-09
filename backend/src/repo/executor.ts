@@ -22,6 +22,14 @@ export async function withTransaction<T>(db: Executor, fn: (trx: Executor) => Pr
 }
 
 /**
+ * Guard for repo functions that issue several statements or take row locks.
+ * Without a transaction, FOR UPDATE releases immediately and nothing reports it.
+ */
+export function requireTransaction(db: Executor, fn: string): void {
+  if (!db.isTransaction) throw new Error(`${fn} must run inside a transaction`);
+}
+
+/**
  * Like withTransaction, and sets app.user_id for the audit triggers.
  * set_config(..., true) is transaction-local, which is required behind the pooler.
  */
