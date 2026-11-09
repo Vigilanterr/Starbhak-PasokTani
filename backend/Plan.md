@@ -82,31 +82,38 @@ Commit: `feat(repo): add database foundation and generated types`
 
 Tables: `regencies`, `districts`, `users`, `media_assets`, `addresses`, `notification_preferences`, `push_subscriptions`, plus read-only `neon_auth."user"` for email.
 
-Key queries: create the `users` row at onboarding, set the default address (clear the old default in the same transaction), and list pending media older than 24 hours for the cleanup job.
+Key queries:
+- [x] Create the `users` row at onboarding.
+- [x] Set the default address (clear the old default in the same transaction).
+- [x] List pending media older than 24 hours for the cleanup job.
 
-Commit: `feat(repo): add identity and reference queries`
+- [x] Commit: `feat(repo): add identity and reference queries`
 
 ### Phase 3: Farmers
 
 Tables: `farmer_profiles`, `farmer_verifications`, `bank_accounts`, `farmer_operating_hours`, `farmer_holidays`, `badges`, `farmer_badges`.
 
-Key queries: near-me search with `ST_DWithin` and `<->`, the admin verification queue, active badges per farmer, and award and revoke for the monthly job.
+Key queries:
+- [x] Near-me search with `ST_DWithin` and `<->`.
+- [x] The admin verification queue.
+- [x] Active badges per farmer.
+- [x] Award and revoke for the monthly job.
 
-Commit: `feat(repo): add farmer queries`
+- [x] Commit: `feat(repo): add farmer queries`
 
 ### Phase 4: Catalog and stock
 
 Tables: `categories`, `tags`, `search_synonyms`, `products`, `product_tags`, `price_tiers`, `surplus_rules`, `product_batches`, `product_photos`, `stock_movements`, `stock_reservations`, `product_subscriptions`.
 
 Key queries:
-- Catalog list with filters, sort and pagination.
-- Search: rewrite through synonyms, match `search_vector`, then fall back to trigram.
-- FEFO batch locking with `FOR UPDATE`, ordered by `expires_on`, so lock order is always the same.
-- Create and release reservations; claim expired ones with `FOR UPDATE SKIP LOCKED`.
-- Surplus and expiry updates for the nightly job.
+- [x] Catalog list with filters, sort and pagination.
+- [x] Search: rewrite through synonyms, match `search_vector`, then fall back to trigram.
+- [x] FEFO batch locking with `FOR UPDATE`, ordered by `expires_on`, so lock order is always the same.
+- [x] Create and release reservations; claim expired ones with `FOR UPDATE SKIP LOCKED`.
+- [x] Surplus and expiry updates for the nightly job.
 
-Done also requires a test that two batches return the nearest expiry first, and that `reserved_qty` cannot pass `on_hand_qty`.
-Commit: `feat(repo): add catalog and stock queries`
+- [x] Done also requires a test that two batches return the nearest expiry first, and that `reserved_qty` cannot pass `on_hand_qty`.
+- [x] Commit: `feat(repo): add catalog and stock queries`
 
 ### Phase 5: Wait List and Commit
 
