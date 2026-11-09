@@ -134,17 +134,17 @@ Commit: `chore(api): point auth at the dev branch and guard the mismatch`
 
 The one-project deployment is the largest unknown, so it is proven here, before any feature work.
 
-- [ ] Delete `controllers/`, `modules/`, old `routes/`, `middlewares/`, `utils/jwt.ts`, `utils/response.ts`, `config/database.ts`, `config/swagger.ts`, and the `bcryptjs` and `jsonwebtoken` dependencies. Delete `scripts/test-all-endpoints.ts`, `scripts/test-results.json` and `report.md`. Check `lib/neon-auth.ts` is still needed before removing it.
-- [ ] Delete `backend/vercel.json` and `backend/package-lock.json` (bun is the package manager). Add the root `vercel.json` and a `.vercelignore` for `.backup-frontend-*`.
-- [ ] `lib/env.ts` validates env at start with zod and has no fallback secrets.
-- [ ] `app.ts`, `factory.ts`, `types/env.ts`. `index.ts` is `export default app`. Lower the `createDb` pool size for Fluid Compute and add `attachDatabasePool` from `@vercel/functions` if it fits.
-- [ ] `error-handler.ts` applies the status table. Add a request id and a `hono/csrf` check that the `Origin` host equals the request host, so previews work. Webhooks and cron are exempt.
-- [ ] `GET /api/v1/health` also runs `select 1`.
-- [ ] `POST /api/cron/:job` with a constant-time `CRON_SECRET` check and the job registry. Names come from `.github/workflows/scheduled-jobs.yml`. **Unbuilt jobs return 200 with `skipped: true`**, because the workflow uses `curl --fail` under `set -e`, and an error would stop the remaining jobs in that run.
-- [ ] Test harness: branch `api-test` from `chore-schema-v2`, reset before each `bun run test:api`. Fake session by user id, and fixtures from existing `neon_auth."user"` ids.
+- [x] Delete `controllers/`, `modules/`, old `routes/`, `middlewares/`, `utils/jwt.ts`, `utils/response.ts`, `config/database.ts`, `config/swagger.ts`, and the `bcryptjs` and `jsonwebtoken` dependencies. Delete `scripts/test-all-endpoints.ts`, `scripts/test-results.json` and `report.md`. Check `lib/neon-auth.ts` is still needed before removing it. (Checked: nothing imported it, so it went too.)
+- [x] Delete `backend/vercel.json` and `backend/package-lock.json` (bun is the package manager). Add the root `vercel.json` and a `.vercelignore` for `.backup-frontend-*`.
+- [x] `lib/env.ts` validates env at start with zod and has no fallback secrets.
+- [x] `app.ts`, `factory.ts`, `types/env.ts`. `index.ts` is `export default app`. Lower the `createDb` pool size for Fluid Compute (5). `attachDatabasePool` from `@vercel/functions` is not added yet: the package is not installed.
+- [x] `error-handler.ts` applies the status table. Add a request id and a `hono/csrf` check that the `Origin` host equals the request host, so previews work. Webhooks and cron are exempt. (Origin check is custom, not `hono/csrf`, so it compares the forwarded host.)
+- [x] `GET /api/v1/health` also runs `select 1`.
+- [x] `POST /api/cron/:job` with a constant-time `CRON_SECRET` check and the job registry. Names come from `.github/workflows/scheduled-jobs.yml`. **Unbuilt jobs return 200 with `skipped: true`**, because the workflow uses `curl --fail` under `set -e`, and an error would stop the remaining jobs in that run.
+- [x] Test harness: branch `api-test` from `chore-schema-v2`, reset before each `bun run test:api`. (Created as `br-tiny-morning-aza5pjgx`. The fake session and `neon_auth."user"` fixtures wait for Phase 2.)
 - [ ] Shared test matrix: 401, 403, bad-uuid 400 and happy path for every route. Architecture test: `services/` imports no Hono, and nothing outside `repo/` imports `pg` or `sql`.
-- [ ] Add `typecheck` for all of `src`.
-- [ ] Deploy a preview. Confirm `/api/v1/health` reaches Hono and `/` reaches Next.js. Watch for the repo's extensionless imports failing under Node ESM. If they do, deploy the `bun build` bundle as the entrypoint.
+- [x] Add `typecheck` for all of `src`.
+- [x] Deploy a preview. Confirm `/api/v1/health` reaches Hono and `/` reaches Next.js. Watch for the repo's extensionless imports failing under Node ESM. If they do, deploy the `bun build` bundle as the entrypoint. (Done: the CommonJS load failed, so the backend now deploys as `dist/index.mjs`, built by `bun run build`. Preview `/api/v1/health` returns 200 with the database up, `/` returns 200, and cron returns 401 without the secret.)
 - [ ] `vercel dev -L` from the repo root runs both services on one port with the binding set. If local env loading fails, fall back to a dev-only Next.js rewrite to `localhost:5000`.
 
 Done when: typecheck, `test:repo` and `test:api` pass, and the preview URL serves both services.
