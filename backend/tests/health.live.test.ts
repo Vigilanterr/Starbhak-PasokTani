@@ -19,7 +19,7 @@ afterAll(async () => {
     NEON_AUTH_BASE_URL: 'https://example.invalid/neondb/auth',
     CRON_SECRET,
   });
-  const app = createApp({ db: db!, env });
+  const app = createApp({ db: db!, env, session: async () => null });
   const res = await app.request('/api/v1/health');
   expect(res.status).toBe(200);
   expect(await res.json()).toEqual({ success: true, data: { status: 'ok', database: 'ok' } });

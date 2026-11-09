@@ -1,4 +1,5 @@
 import { createDb } from './repo/db';
+import { createSessionLookup } from './lib/session';
 import type { AppDeps } from './app';
 import type { Env } from './lib/env';
 
@@ -6,5 +7,9 @@ import type { Env } from './lib/env';
 const POOL_SIZE = 5;
 
 export function createDeps(env: Env): AppDeps {
-  return { env, db: createDb(env.DATABASE_URL, POOL_SIZE) };
+  return {
+    env,
+    db: createDb(env.DATABASE_URL, POOL_SIZE),
+    session: createSessionLookup({ authBaseUrl: env.NEON_AUTH_BASE_URL }),
+  };
 }

@@ -11,13 +11,14 @@ import type { AppBindings } from '../src/types/env';
 // No database is needed for these tests. The pool is pointed at a closed port, so any
 // query fails fast, which is what the health and 503 tests rely on.
 const CRON_SECRET = 'c'.repeat(64);
+const noSession = async () => null;
 const env = loadEnv({
   DATABASE_URL: 'postgresql://user:pass@127.0.0.1:1/none',
   NEON_AUTH_BASE_URL: 'https://example.invalid/neondb/auth',
   CRON_SECRET,
 });
 const db = createDb(env.DATABASE_URL, 1);
-const app = createApp({ db, env });
+const app = createApp({ db, env, session: noSession });
 
 afterAll(async () => {
   await db.destroy();

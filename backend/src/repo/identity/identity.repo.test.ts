@@ -5,9 +5,9 @@ import { CheckViolationError, ForeignKeyViolationError, UniqueViolationError, ma
 import type { Executor } from '../executor';
 import { requireTransaction } from '../executor';
 import { withRollback } from '../test-utils';
-import { findRegencyBySlug, listDistrictsForRegency, listRegencies } from './reference.repo';
+import { findDistrictByName, findRegencyBySlug, listDistrictsForRegency, listRegencies } from './reference.repo';
 import {
-  deletePushSubscription, ensureUser, findAddressForUser, findUserById, findUserWithEmail,
+  deletePushSubscription, ensureUser, findAccountWithEmail, findAddressForUser, findUserById, findUserWithEmail,
   insertAddress, insertMediaAsset, listAddressesForUser, listNotificationPreferences,
   listMediaAwaitingDestroy, listPushSubscriptions, listStalePendingMedia, markMediaDeleted, markMediaDestroyed, markMediaReady,
   markPushSucceeded, markUserOnboarded, markUsersSeen, setDefaultAddress, upsertNotificationPreference,
@@ -69,6 +69,16 @@ describe('reference data', () => {
       expect(rows.every((r) => r.regency_code === regencyCode)).toBe(true);
     });
   });
+
+  test('finds a district by name, ignoring case, only inside its own regency', async () => {
+    await withRollback(async (trx) => {
+      const { regencyCode, districtCode } = await geo(trx);
+      const district = (await listDistrictsForRegency(trx, regencyCode, 1))[0]!;
+      expect(await findDistrictByName(trx, regencyCode, district.name.toUpperCase())).toMatchObject({ code: districtCode });
+      expect(await findDistrictByName(trx, regencyCode, 'Kecamatan Antah Berantah')).toBeUndefined();
+      expect(await findDistrictByName(trx, '0000000000', district.name)).toBeUndefined();
+    });
+  });
 });
 
 describe('users', () => {
@@ -102,6 +112,18 @@ describe('users', () => {
       expect(await findUserById(trx, id!)).toBeDefined();
       await trx.updateTable('users').set({ deleted_at: sql<Date>`now()` }).where('id', '=', id!).execute();
       expect(await findUserById(trx, id!)).toBeUndefined();
+    });
+  });
+
+  test('findAccountWithEmail still returns a soft-deleted row, which findUserWithEmail hides', async () => {
+    await withRollback(async (trx) => {
+      const [id] = await authIds(trx, 1);
+      await ensureUser(trx, { id: id!, fullName: 'Dihapus', role: 'consumer' });
+      await sql`update users set deleted_at = now() where id = ${id!}::uuid`.execute(trx);
+      expect(await findUserWithEmail(trx, id!)).toBeUndefined();
+      const account = await findAccountWithEmail(trx, id!);
+      expect(account?.deleted_at).toBeInstanceOf(Date);
+      expect(account?.email).toBeString();
     });
   });
 

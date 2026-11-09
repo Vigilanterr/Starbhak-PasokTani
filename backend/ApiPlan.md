@@ -142,24 +142,24 @@ The one-project deployment is the largest unknown, so it is proven here, before 
 - [x] `GET /api/v1/health` also runs `select 1`.
 - [x] `POST /api/cron/:job` with a constant-time `CRON_SECRET` check and the job registry. Names come from `.github/workflows/scheduled-jobs.yml`. **Unbuilt jobs return 200 with `skipped: true`**, because the workflow uses `curl --fail` under `set -e`, and an error would stop the remaining jobs in that run.
 - [x] Test harness: branch `api-test` from `chore-schema-v2`, reset before each `bun run test:api`. (Created as `br-tiny-morning-aza5pjgx`. The fake session and `neon_auth."user"` fixtures wait for Phase 2.)
-- [ ] Shared test matrix: 401, 403, bad-uuid 400 and happy path for every route. Architecture test: `services/` imports no Hono, and nothing outside `repo/` imports `pg` or `sql`.
+- [x] Shared test matrix: `tests/route-matrix.test.ts` (401, csrf 403, 503 when auth is down) for each session route, and `tests/me.live.test.ts` for the happy path and 400/403 cases. Bad-uuid 400 comes with the first route that takes a uuid. Architecture test: `services/` imports no Hono, and nothing outside `repo/` imports `pg` or `sql`.
 - [x] Add `typecheck` for all of `src`.
 - [x] Deploy a preview. Confirm `/api/v1/health` reaches Hono and `/` reaches Next.js. Watch for the repo's extensionless imports failing under Node ESM. If they do, deploy the `bun build` bundle as the entrypoint. (Done: the CommonJS load failed, so the backend now deploys as `dist/index.mjs`, built by `bun run build`. Preview `/api/v1/health` returns 200 with the database up, `/` returns 200, and cron returns 401 without the secret.)
-- [ ] `vercel dev -L` from the repo root runs both services on one port with the binding set. If local env loading fails, fall back to a dev-only Next.js rewrite to `localhost:5000`.
+- [ ] `vercel dev -L` from the repo root runs both services on one port with the binding set. (Not run yet.) If local env loading fails, fall back to a dev-only Next.js rewrite to `localhost:5000`.
 
 Done when: typecheck, `test:repo` and `test:api` pass, and the preview URL serves both services.
 Commit: `refactor(api)!: remove the schema v1 API and deploy the new skeleton`
 
 ### Phase 2: Session and onboarding
 
-- [ ] `middleware/session.ts` and `requireRole(...)`, using lowercase `users.role`. Suspended and soft-deleted users get 403.
-- [ ] `GET /me`: `findUserWithEmail`. A signed-in person with no `users` row gets `onboarding_required`.
-- [ ] `POST /me/onboarding`: `ensureUser`, `ensureFarmerProfile` for farmers (shop name, regency, district), `markUserOnboarded`, all in one transaction. The `admin` role cannot be chosen (`OnboardingRole`). Replays change nothing.
-- [ ] Frontend: wire `masuk()` to `authClient.signIn.email`, and send the role and shop fields that `daftar()` currently drops by calling `POST /me/onboarding` after sign-up.
-- [ ] Frontend: a small onboarding page for Google sign-ins that have no `users` row (role, and shop details for farmers).
-- [ ] Frontend: `src/proxy.ts` for early redirects, with the role check repeated in each group's layout, per `routes.md`. Read `node_modules/next/dist/docs/` first, as `frontend/AGENTS.md` requires.
-- [ ] Add the Vercel preview and production domains to Neon Auth trusted domains, on both branches.
-- [ ] One real-session test built from `test-neon-signup.ts`, on the dev branch only.
+- [x] `middleware/session.ts` and `requireRole(...)`, using lowercase `users.role`. Suspended and soft-deleted users get 403. Forwards only `__Secure-neon-auth.*` cookies (`lib/session.ts`). Auth outage gives 503 `auth_unavailable`.
+- [x] `GET /me`: `findAccountWithEmail` (keeps soft-deleted rows so they get 403, not `onboarding_required`). A signed-in person with no `users` row gets `onboarding_required`.
+- [x] `POST /me/onboarding`: `ensureUser`, `ensureFarmerProfile` for farmers (shop name, regency, district), `markUserOnboarded`, all in one transaction. The `admin` role cannot be chosen (`OnboardingRole`). Replays change nothing. Changed from the plan: `kecamatan` is the district **name**, matched inside the chosen regency, because the sign-up form types it and the district list only arrives with Phase 3. JSON role names are `konsumen`, `umkm`, `petani`, mapped in `mappers/peran.ts`.
+- [x] Frontend: wire `masuk()` to `authClient.signIn.email`, and send the role and shop fields that `daftar()` currently drops by calling `POST /me/onboarding` after sign-up. Sign-in now goes through the gate page first. Uncommitted: it sits on the existing Neon Auth wiring in `auth-api.ts`, which is not yet committed.
+- [x] Frontend: `/daftar/lengkapi`, a gate page for anyone signed in without a profile (Google sign-ins, or sign-up that had no session yet). Onboarded accounts go straight to `?lanjut=` or `/`.
+- [x] Frontend: `src/proxy.ts` for early redirects from the cookie: guests off the auth pages, signed-out users off `/daftar/lengkapi`. The role check in each group's layout comes with the `(pembeli)` and `(petani)` groups in Phase 4. Read from `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`.
+- [ ] Add the Vercel preview and production domains to Neon Auth trusted domains, on both branches. **Needs the user:** the preview domain is not known until the deploy.
+- [ ] One real-session test built from `test-neon-signup.ts`, on the dev branch only. Not written: that script imports `src/lib/neon-auth.js`, which Phase 1 deleted, and each run creates a real account on the dev auth.
 
 Done when: a browser sign-up on a preview deployment reaches `GET /api/v1/me` with the right role.
 Commit: `feat(api): add Neon Auth session and onboarding`
