@@ -121,6 +121,21 @@ Tables: `waitlists`, `waitlist_events`, `waitlist_media`, `waitlist_followers`, 
 
 Key queries: the timeline, follow and unfollow, and Commit as one atomic `UPDATE waitlists SET committed_min_qty = committed_min_qty + $qty`, so the quota `CHECK` decides. Also commitments past `remainder_due_at`, and allocation order by `remainder_paid_at`.
 
+Checklist (file: `src/repo/waitlist/waitlist.repo.ts`, test: `waitlist.repo.test.ts`):
+- [x] Read: `findWaitlistById` (public) and `findWaitlistForFarmer` (owner-scoped). Date columns as `::text`.
+- [x] Write: `insertWaitlist` (fixtures and the farmer create flow).
+- [x] Timeline: `listWaitlistTimeline`, keyset on `(created_at, id)` desc, cursor is the last row id (a JS Date would drop rows at microsecond ties), fetches `limit + 1`. Test: newest first and the cursor pages.
+- [x] Append-only: `insertWaitlistEvent` (no update or delete). Test: `harvest_failed` without a reason fails with `chk_reason_required`.
+- [x] Event media: `insertEventMedia` (multi-row, empty list returns early) and `listMediaForEvents`. Test: one media row per event.
+- [x] Status change: `changeWaitlistStatus` guards `status = from`, sets `failure_reason`, and writes the event in one transaction. Test: stale `from` returns undefined. Test: `harvest_failed` without `failureReason` fails with `chk_failed_reason`.
+- [x] Follow and unfollow: `followWaitlist` (`ON CONFLICT DO NOTHING`) and `unfollowWaitlist`. Test: the trigger moves `follower_count` once, and a replay changes nothing.
+- [x] Commit: `commitToWaitlist` (requires a transaction) does the quota `UPDATE` first, then inserts the commitment. Test: within quota, `commitment_count` moves by the trigger. Test: over quota fails with `chk_quota_not_exceeded`. Test: unknown wait list returns undefined.
+- [x] Owner read: `findCommitmentForBuyer`. Test: another buyer gets nothing.
+- [x] Remainder job: `lockOverdueRemainders` uses `FOR UPDATE SKIP LOCKED` with the partial index predicate repeated literally, and requires a transaction. Test: only `awaiting_remainder` past due rows return. Test: the guard throws outside a transaction.
+- [x] Allocation order: `listCommitmentsInAllocationOrder` by `remainder_paid_at` nulls last, then `id`. Test: the order is correct.
+- [x] `EXPLAIN` on the dev branch: the overdue, timeline and allocation queries use `commitments_remainder_due`, `waitlist_events_waitlist_id_created_at_idx` and `commitments_waitlist_id_status_remainder_paid_at_idx`.
+- [x] `bun run test:repo` and `bun run typecheck:repo` pass.
+
 Done also requires a test that a Commit over quota is rejected as a typed error.
 Commit: `feat(repo): add wait list and commitment queries`
 
