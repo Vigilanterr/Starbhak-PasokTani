@@ -163,6 +163,19 @@ Key queries: the fee setting in effect now, creating a checkout with one order p
 
 Note: production needs `database/seeds/platform_fee_settings.sql` run after the first admin signs up, or orders cannot be created. Tests create their own fee row.
 
+Checklist (file: `src/repo/orders/orders.repo.ts`, test: `orders.repo.test.ts`):
+- [x] Fee: `insertFeeSetting` and `findFeeSettingInEffect` (latest `effective_from` at or before `now()`). Test: a future version is ignored. Test: commission above 5% fails with `chk_commission_max`. Test: a repeated `effective_from` fails with `UniqueViolationError`.
+- [x] Checkout: `insertCheckout` (address snapshot as jsonb), `findCheckoutForBuyer` (owner-scoped). Orders: `insertOrder` (fee snapshot), `insertOrderItems` (one statement, empty list returns early). Test: one checkout with one order per farmer, and each party sees only its own. Test: `chk_buyer_total` and `chk_order_item_qty` fail as typed errors.
+- [x] Lists: `listOrdersForBuyer` and `listOrdersForFarmer`, newest first, keyset on `(created_at, id)`, limit + 1. Test: newest first, and pages do not overlap.
+- [x] Status: `setOrderStatus` (requires a transaction): guarded `UPDATE` and the history row in one transaction, timestamps by target state. Test: a stale `from` writes nothing. Test: cancel records the reason and actor. Test: outside a transaction it throws.
+- [x] Completion: `completeOrder` moves `products.sold_qty` (per product, sorted) and `farmer_profiles.completed_order_count`, only when the status change happened. Test: a replay changes nothing.
+- [x] Sale: `convertReservation` turns an active hold into a sale: batch on_hand and reserved drop, a `sale` movement and an allocation are written. Test: converts once. Test: a released hold cannot be converted. Test: outside a transaction it throws.
+- [x] Shipments: `insertShipment`, `findShipmentForParty`, `markShipmentArrived` (auto-release = `now()` + 3 days, once). Test: a second shipment fails with `shipments_order_id_key`. Test: a stranger gets nothing.
+- [x] Jobs: `lockUnpaidOrders` and `lockOverdueConfirmedOrders` with `FOR UPDATE SKIP LOCKED` and the partial index predicate repeated. Test: only due rows are claimed. Test: outside a transaction they throw.
+- [x] Cursor: the keyset takes the last row's id, not a JS `Date`, because a `Date` keeps milliseconds and drops rows at microsecond ties (found by a failing test).
+- [x] `EXPLAIN` on the dev branch: the buyer and farmer lists use `orders_buyer_id_created_at_idx` and `orders_farmer_id_status_created_at_idx`. The unpaid and overdue jobs use `orders_payment_due` and `orders_respond_by`. The tables are tiny, so the planner scans them unless seq scan is disabled.
+- [x] `bun run test:repo` (134 pass) and `bun run typecheck:repo` pass.
+
 Commit: `feat(repo): add checkout and order queries`
 
 ### Phase 8: Payments and ledger
