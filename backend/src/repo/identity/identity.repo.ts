@@ -68,6 +68,21 @@ export function markUserOnboarded(db: Executor, userId: string, profile: { fullN
     .executeTakeFirst();
 }
 
+/**
+ * Presence flush: every user with a live Redis presence key was seen just now, so last_seen_at is Postgres
+ * now() rather than a time from the caller. Soft-deleted users are skipped. Returns the number of rows changed.
+ * One array parameter, so a large flush cannot reach the bind parameter limit. An empty list returns early.
+ */
+export async function markUsersSeen(db: Executor, userIds: string[]): Promise<number> {
+  if (userIds.length === 0) return 0;
+  const result = await db.updateTable('users')
+    .set({ last_seen_at: sql<Date>`now()` })
+    .where(sql<boolean>`id = any(${userIds}::uuid[])`)
+    .where('deleted_at', 'is', null)
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows);
+}
+
 // ---------- Addresses ----------
 
 export const ADDRESS_COLUMNS = [

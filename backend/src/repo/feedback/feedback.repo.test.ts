@@ -9,8 +9,8 @@ import { ensureUser, insertMediaAsset } from '../identity/identity.repo';
 import { listDistrictsForRegency, listRegencies } from '../identity/reference.repo';
 import { insertFeeSetting, insertOrder, insertOrderItems } from '../orders/orders.repo';
 import {
-  findComplaintForParty, insertComplaintMessage, insertReport, insertReview, insertReviewPhotos,
-  listComplaintMessages, listComplaintQueue, listComplaintsForBuyer, listComplaintsForFarmer,
+  findComplaintForParty, insertComplaintEvidence, insertComplaintMessage, insertReport, insertReview, insertReviewPhotos,
+  listComplaintEvidence, listComplaintMessages, listComplaintQueue, listComplaintsForBuyer, listComplaintsForFarmer,
   listPhotosForReviews, listPublishedReviewsForFarmer, listPublishedReviewsForProduct, listReportQueue,
   openComplaint, replyToReview, setComplaintStatus, setReportStatus, setReviewModeration,
 } from './feedback.repo';
@@ -300,6 +300,28 @@ describe('complaints', () => {
       expect(page1.slice(0, 2).map((m) => m.id)).toEqual([m1!.id, m2!.id]);
 
       expect(await listComplaintMessages(trx, { complaintId: c!.id, viewerId: f.buyer2Id, afterId: null, limit: 10 })).toEqual([]);
+    });
+  });
+
+  test('evidence: a party attaches their own media once, foreign media is dropped, and a stranger neither writes nor reads', async () => {
+    await withRollback(async (trx) => {
+      const f = await fixture(trx);
+      const { order } = await orderWithItem(trx, f);
+      const c = await openComplaint(trx, { orderId: order.id, buyerId: f.buyerId, reason: 'other', description: 'Busuk' });
+      const media = (ownerId: string) => insertMediaAsset(trx, { ownerId, kind: 'complaint_evidence', cloudinaryPublicId: `ev-${crypto.randomUUID()}` });
+      const mine = await media(f.buyerId);
+      const theirs = await media(f.buyer2Id);
+
+      expect(await insertComplaintEvidence(trx, { complaintId: c!.id, uploaderId: f.buyerId, mediaIds: [] })).toEqual([]);
+      expect(await insertComplaintEvidence(trx, { complaintId: c!.id, uploaderId: f.buyer2Id, mediaIds: [theirs.id] })).toEqual([]);
+
+      const written = await insertComplaintEvidence(trx, { complaintId: c!.id, uploaderId: f.buyerId, mediaIds: [mine.id, theirs.id] });
+      expect(written.map((e) => e.media_id)).toEqual([mine.id]);
+      expect(await insertComplaintEvidence(trx, { complaintId: c!.id, uploaderId: f.buyerId, mediaIds: [mine.id] })).toEqual([]);
+
+      const seenByFarmer = await listComplaintEvidence(trx, { complaintId: c!.id, viewerId: f.farmerId, limit: 10 });
+      expect(seenByFarmer.map((e) => e.media_id)).toEqual([mine.id]);
+      expect(await listComplaintEvidence(trx, { complaintId: c!.id, viewerId: f.buyer2Id, limit: 10 })).toEqual([]);
     });
   });
 

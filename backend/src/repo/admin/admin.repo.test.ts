@@ -2,12 +2,13 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import { sql } from 'kysely';
 import { closeDb, getDb } from '../db';
 import type { Executor } from '../executor';
-import { withRollback } from '../test-utils';
+import { settleDeferred, withRollback } from '../test-utils';
 import { insertProduct, setProductPrice, upsertProductSubscription } from '../catalog/catalog.repo';
 import { ensureFarmerProfile } from '../farmers/farmers.repo';
-import { ensureUser } from '../identity/identity.repo';
+import { ensureUser, markUsersSeen } from '../identity/identity.repo';
 import { listDistrictsForRegency, listRegencies } from '../identity/reference.repo';
 import { insertFeeSetting, insertOrder, insertOrderItems, setOrderStatus } from '../orders/orders.repo';
+import { getOrCreateLedgerAccount, postLedgerTransaction } from '../payments/payments.repo';
 import { changeWaitlistStatus, findWaitlistById, insertWaitlist } from '../waitlist/waitlist.repo';
 import {
   findAdminOverview, findCounterDrift, findPlatformSetting, flushProductDayCounters, listAuditLogsForEntity,
@@ -246,6 +247,46 @@ describe('admin overview', () => {
     expect(after.paidOrders - before.paidOrders).toBe(1);
     expect(after.harvestOutcomes - before.harvestOutcomes).toBe(1);
     expect(after.harvestDelayed - before.harvestDelayed).toBe(1);
+  }));
+
+  test('active users move with the presence flush, and a soft-deleted user or a later cutoff does not count', () => withRollback(async (trx) => {
+    const f = await fixture(trx);
+    const range = { from: new Date(Date.now() - DAY_MS), to: new Date(Date.now() + DAY_MS) };
+    const recent = { ...range, activeSince: new Date(Date.now() - DAY_MS) };
+    const future = { ...range, activeSince: new Date(Date.now() + DAY_MS) };
+    const before = await findAdminOverview(trx, recent);
+    const futureBefore = await findAdminOverview(trx, future);
+
+    expect(await markUsersSeen(trx, [f.buyerId, f.farmerId])).toBe(2);
+    expect((await findAdminOverview(trx, recent)).activeUsers - before.activeUsers).toBe(2);
+    expect((await findAdminOverview(trx, future)).activeUsers - futureBefore.activeUsers).toBe(0);
+
+    await sql`update users set deleted_at = now() where id = ${f.farmerId}::uuid`.execute(trx);
+    expect((await findAdminOverview(trx, recent)).activeUsers - before.activeUsers).toBe(1);
+  }));
+
+  test('the escrow balance moves by exactly the escrow leg of a settled posting', () => withRollback(async (trx) => {
+    const window = {
+      from: new Date(Date.now() - DAY_MS),
+      to: new Date(Date.now() + DAY_MS),
+      activeSince: new Date(Date.now() - DAY_MS),
+    };
+    const clearing = await getOrCreateLedgerAccount(trx, { ownerId: null, type: 'payment_clearing' });
+    const escrow = await getOrCreateLedgerAccount(trx, { ownerId: null, type: 'escrow' });
+    const before = BigInt((await findAdminOverview(trx, window)).escrowBalance);
+
+    await postLedgerTransaction(trx, {
+      kind: 'payment_received',
+      idempotencyKey: `overview-${crypto.randomUUID()}`,
+      entries: [
+        { accountId: clearing.id, amount: -60600 },
+        { accountId: escrow.id, amount: 60600 },
+      ],
+    });
+    await settleDeferred(trx);
+
+    // Summing every account type would net the two legs to zero, so this also proves the escrow filter.
+    expect(BigInt((await findAdminOverview(trx, window)).escrowBalance) - before).toBe(60600n);
   }));
 });
 

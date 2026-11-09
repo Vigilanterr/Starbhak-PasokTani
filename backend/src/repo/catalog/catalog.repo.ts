@@ -562,6 +562,39 @@ export function lockFefoBatches(db: Executor, productId: string) {
     .execute();
 }
 
+/**
+ * Nightly job: claims active, unexpired batches whose cached discount differs from what their product's rules
+ * give today, with the target in target_discount_pct (null clears it). Apply each with setBatchSurplusDiscount:
+ * a settled batch drops out, so the job repeats this until it returns nothing, and a rerun finds no work.
+ * Requires a transaction.
+ */
+export function lockBatchesForSurplusPass(db: Executor, limit: number) {
+  requireTransaction(db, 'lockBatchesForSurplusPass');
+  const target = sql<string | null>`(
+    select r.discount_pct from surplus_rules r
+    where r.product_id = b.product_id
+      and r.days_remaining >= b.expires_on - (now() at time zone 'Asia/Jakarta')::date
+    order by r.days_remaining asc
+    limit 1)`;
+  return db.selectFrom('product_batches as b')
+    .select([
+      'b.id',
+      'b.product_id',
+      sql<string>`b.expires_on::text`.as('expires_on'),
+      'b.surplus_discount_pct',
+      target.as('target_discount_pct'),
+    ])
+    .where('b.status', '=', 'active')
+    .where(sql<boolean>`b.expires_on >= (now() at time zone 'Asia/Jakarta')::date`)
+    .where(sql<boolean>`b.surplus_discount_pct is distinct from ${target}`)
+    .orderBy('b.expires_on', 'asc')
+    .orderBy('b.id', 'asc')
+    .limit(limit)
+    .forUpdate()
+    .skipLocked()
+    .execute();
+}
+
 /** Nightly job: sets or clears the cached surplus discount of an active batch. */
 export function setBatchSurplusDiscount(db: Executor, batchId: string, pct: string | number | null) {
   return db.updateTable('product_batches')

@@ -10,7 +10,7 @@ import {
   deletePushSubscription, ensureUser, findAddressForUser, findUserById, findUserWithEmail,
   insertAddress, insertMediaAsset, listAddressesForUser, listNotificationPreferences,
   listPushSubscriptions, listStalePendingMedia, markMediaDeleted, markMediaReady,
-  markPushSucceeded, markUserOnboarded, setDefaultAddress, upsertNotificationPreference,
+  markPushSucceeded, markUserOnboarded, markUsersSeen, setDefaultAddress, upsertNotificationPreference,
   upsertPushSubscription,
 } from './identity.repo';
 
@@ -112,6 +112,23 @@ describe('users', () => {
       const row = await findUserWithEmail(trx, id!);
       const auth = await trx.selectFrom('neon_auth.user').select('email').where('id', '=', id!).executeTakeFirstOrThrow();
       expect(row?.email).toBe(auth.email);
+    });
+  });
+
+  test('markUsersSeen stamps live users, skips soft-deleted ones, and an empty list changes nothing', async () => {
+    await withRollback(async (trx) => {
+      const [liveId, deletedId] = await authIds(trx, 2);
+      await ensureUser(trx, { id: liveId!, fullName: 'Aktif', role: 'consumer' });
+      await ensureUser(trx, { id: deletedId!, fullName: 'Terhapus', role: 'consumer' });
+      await sql`update users set deleted_at = now() where id = ${deletedId!}::uuid`.execute(trx);
+
+      expect(await markUsersSeen(trx, [])).toBe(0);
+      expect(await markUsersSeen(trx, [liveId!, deletedId!])).toBe(1);
+
+      const seen = await trx.selectFrom('users').select(['id', 'last_seen_at'])
+        .where('id', 'in', [liveId!, deletedId!]).execute();
+      expect(seen.find((u) => u.id === liveId)?.last_seen_at).toBeInstanceOf(Date);
+      expect(seen.find((u) => u.id === deletedId)?.last_seen_at).toBeNull();
     });
   });
 

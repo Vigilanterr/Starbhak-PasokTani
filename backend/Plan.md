@@ -270,12 +270,21 @@ Commit: `feat(repo): add analytics and admin queries`
 
 ### Phase 12: Coverage and handoff
 
-- [ ] Script check: all 61 tables appear in at least one `.repo.ts` file.
-- [ ] Check each job in `documentation.md` section 7 has its claim query.
-- [ ] Run the full suite and the scoped typecheck.
-- [ ] Update this file and report what is left.
+Checklist (test: `src/repo/coverage.repo.test.ts`):
+- [x] Script check: all 61 tables appear in at least one `.repo.ts` file. It found `complaint_evidence` unqueried, so `insertComplaintEvidence` and `listComplaintEvidence` were added (party and owner checks in the statement, replay is a no-op).
+- [x] Check each job in `documentation.md` section 7 has its claim query. The test maps every documented job to its functions and fails if a job is added or renamed in the doc. It found two missing queries, both added: `markUsersSeen` (presence flush) and `lockBatchesForSurplusPass` (returns only batches whose cached discount differs from their rule).
+- [x] Admin overview: active users and escrow balance are now asserted, as before and after differences. Active users move through `markUsersSeen`, the first write path for `last_seen_at`.
+- [x] `EXPLAIN` on the dev branch with seq scan off: the surplus claim uses `product_batches_active_expiry` and `surplus_rules_product_id_days_remaining_idx`, and the evidence list uses `complaint_evidence_complaint_id_idx`.
+- [x] Run the full suite and the scoped typecheck: `bun run test:repo` (212 pass) and `bun run typecheck:repo` pass.
+- [x] Update this file and report what is left.
 
 Commit: `test(repo): verify table and job coverage`
+
+What is left (each needs a decision, so none is fixed here):
+- Media cleanup covers pending uploads only. The docs have `deleted` mean "parent gone, destroy on Cloudinary", while `markMediaDeleted` sets it after the destroy, and `media_assets` has no column to tell the two apart. The second half of the job needs a new status or a `destroyed_at` column (a migration).
+- Badge evaluation has `awardBadge` and `revokeBadge`, but no query that picks the farmers to award or revoke, because `badges.criteria` is `{}` until admins set the thresholds.
+- `users.updated_at` moves on every presence flush, through the `set_updated_at` trigger. Harmless today, but do not read it as "profile last edited".
+- Still open from earlier phases: two active complaints on one order (Phase 9), production migrations, and the two open questions below.
 
 ## Out of scope
 

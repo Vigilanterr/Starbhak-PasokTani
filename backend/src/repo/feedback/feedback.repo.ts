@@ -262,6 +262,40 @@ export function insertComplaintMessage(db: Executor, m: { complaintId: string; s
 }
 
 /**
+ * Attaches the uploader's own media to a complaint as evidence, in one INSERT ... SELECT. A non-party writes
+ * nothing, foreign media is dropped, and media already attached is skipped, so a replay changes nothing.
+ * Returns the rows written. An empty list returns early.
+ */
+export async function insertComplaintEvidence(db: Executor, a: { complaintId: string; uploaderId: string; mediaIds: string[] }) {
+  if (a.mediaIds.length === 0) return [];
+  return db.insertInto('complaint_evidence')
+    .columns(['complaint_id', 'media_id'])
+    .expression((eb) => eb.selectFrom('complaints')
+      .innerJoin('media_assets as m', (join) => join
+        .on('m.owner_id', '=', a.uploaderId)
+        .on(sql<boolean>`m.id = any(${a.mediaIds}::uuid[])`))
+      .select(['complaints.id as complaint_id', 'm.id as media_id'])
+      .where('complaints.id', '=', a.complaintId)
+      .where(complaintParty(a.uploaderId)))
+    .onConflict((oc) => oc.column('media_id').doNothing())
+    .returning(['id', 'complaint_id', 'media_id'])
+    .execute();
+}
+
+/** Evidence on one complaint, oldest first (UUIDv7 ids are time ordered), for a party only. A non-party gets an empty list. */
+export function listComplaintEvidence(db: Executor, a: { complaintId: string; viewerId: string; limit: number }) {
+  return db.selectFrom('complaint_evidence')
+    .select(['id', 'complaint_id', 'media_id'])
+    .where('complaint_id', 'in', (eb) => eb.selectFrom('complaints')
+      .select('id')
+      .where('id', '=', a.complaintId)
+      .where(complaintParty(a.viewerId)))
+    .orderBy('id', 'asc')
+    .limit(a.limit)
+    .execute();
+}
+
+/**
  * The thread in order (oldest first), for a party only. A non-party gets an empty list. Keyset on (created_at, id).
  * Matches complaint_messages_complaint_id_created_at_idx.
  */

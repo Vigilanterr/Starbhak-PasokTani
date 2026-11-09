@@ -1,7 +1,7 @@
 import { sql } from 'kysely';
 import { afterAll, describe, expect, test } from 'bun:test';
 
-import { closeDb } from '../db';
+import { closeDb, getDb } from '../db';
 import { CheckViolationError, UniqueViolationError, mapDbError } from '../errors';
 import type { Executor } from '../executor';
 import { settleDeferred, withRollback } from '../test-utils';
@@ -11,9 +11,9 @@ import { listRegencies, listDistrictsForRegency } from '../identity/reference.re
 import {
   adjustBatchOnHand, ensureTag, expireDueBatches, findCategoryBySlug, findEffectiveUnitPrice,
   findProductBySlug, findSurplusRuleFor, insertProduct, insertProductPhoto, listCatalog,
-  listBatchesForProduct, listPriceTiers, listProductPhotos, lockFefoBatches, receiveBatch,
+  listBatchesForProduct, listPriceTiers, listProductPhotos, lockBatchesForSurplusPass, lockFefoBatches, receiveBatch,
   releaseExpiredReservations, releaseReservation, replacePriceTiers, replaceSurplusRules,
-  reserveStock, resolveSearchTerm, searchProducts, setProductTags, upsertProductSubscription,
+  reserveStock, resolveSearchTerm, searchProducts, setBatchSurplusDiscount, setProductTags, upsertProductSubscription,
   deleteProductSubscription, findProductById, findBatchById,
 } from './catalog.repo';
 
@@ -424,6 +424,45 @@ describe('stock', () => {
       expect((err as CheckViolationError).constraint).toBe('chk_reserved_le_on_hand');
     });
   }, 30_000);
+
+  test('the surplus pass claims only batches whose discount differs from their rule, and a rerun finds no work', async () => {
+    await withRollback(async (trx) => {
+      const [farmerId] = await authIds(trx, 1);
+      await farmer(trx, farmerId!);
+      const cat = await category(trx);
+      const p = await product(trx, farmerId!, cat.id);
+      await replaceSurplusRules(trx, p.id, [
+        { daysRemaining: 3, discountPct: 25 },
+        { daysRemaining: 7, discountPct: 10 },
+      ]);
+      const { rows: [today] } = await sql<{ d: string }>`select (now() at time zone 'Asia/Jakarta')::date::text as d`.execute(trx);
+      const inDays = async (n: number) => {
+        const r = await sql<{ d: string }>`select (${today!.d}::date + ${n}::int)::text as d`.execute(trx);
+        return r.rows[0]!.d;
+      };
+      const batch = async (n: number) => (await receiveBatch(trx, {
+        productId: p.id, createdBy: farmerId!, initialQty: 5, harvestedOn: '2020-01-01', expiresOn: await inDays(n),
+      }))!;
+      const near = await batch(2);
+      const mid = await batch(5);
+      const noRule = await batch(30); // no rule applies and nothing cached, so no work
+      const stale = await batch(40); // no rule applies but a discount is cached, so it must clear
+      await setBatchSurplusDiscount(trx, stale.id, 15);
+
+      const claimed = (await lockBatchesForSurplusPass(trx, 10_000)).filter((b) => b.product_id === p.id);
+      expect(claimed.map((b) => [b.id, b.target_discount_pct])).toEqual([
+        [near.id, '25.00'], [mid.id, '10.00'], [stale.id, null],
+      ]);
+      expect(claimed.map((b) => b.id)).not.toContain(noRule.id);
+
+      for (const b of claimed) await setBatchSurplusDiscount(trx, b.id, b.target_discount_pct);
+      expect((await lockBatchesForSurplusPass(trx, 10_000)).filter((b) => b.product_id === p.id)).toEqual([]);
+    });
+  }, 30_000);
+
+  test('the surplus pass requires a transaction', () => {
+    expect(() => lockBatchesForSurplusPass(getDb(), 1)).toThrow(/inside a transaction/);
+  });
 
   test('the expiry job marks due batches expired and they leave the FEFO lock', async () => {
     await withRollback(async (trx) => {
