@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { closeDb } from '../db';
-import { CheckViolationError, mapDbError } from '../errors';
+import { CheckViolationError, UniqueViolationError, mapDbError } from '../errors';
 import type { Executor } from '../executor';
 import { withRollback } from '../test-utils';
 import { ensureFarmerProfile } from '../farmers/farmers.repo';
@@ -300,6 +300,28 @@ describe('complaints', () => {
       expect(page1.slice(0, 2).map((m) => m.id)).toEqual([m1!.id, m2!.id]);
 
       expect(await listComplaintMessages(trx, { complaintId: c!.id, viewerId: f.buyer2Id, afterId: null, limit: 10 })).toEqual([]);
+    });
+  });
+
+  test('a second active complaint on one order is rejected, and a new one is allowed once the first is closed', async () => {
+    const dup = await withRollback(async (trx) => {
+      const f = await fixture(trx);
+      const { order } = await orderWithItem(trx, f);
+      await openComplaint(trx, { orderId: order.id, buyerId: f.buyerId, reason: 'damaged', description: 'Satu' });
+      await openComplaint(trx, { orderId: order.id, buyerId: f.buyerId, reason: 'damaged', description: 'Dua' });
+    }).catch((e: unknown) => e);
+    expect(dup).toBeInstanceOf(UniqueViolationError);
+    expect((dup as UniqueViolationError).constraint).toBe('complaints_one_active_per_order');
+
+    await withRollback(async (trx) => {
+      const f = await fixture(trx);
+      const { order } = await orderWithItem(trx, f);
+      const first = await openComplaint(trx, { orderId: order.id, buyerId: f.buyerId, reason: 'damaged', description: 'Satu' });
+      await setComplaintStatus(trx, { complaintId: first!.id, from: 'open', to: 'farmer_responded' });
+      await setComplaintStatus(trx, { complaintId: first!.id, from: 'farmer_responded', to: 'rejected' });
+      const again = await openComplaint(trx, { orderId: order.id, buyerId: f.buyerId, reason: 'damaged', description: 'Lagi' });
+      expect(again).toBeDefined();
+      expect(again!.id).not.toBe(first!.id);
     });
   });
 

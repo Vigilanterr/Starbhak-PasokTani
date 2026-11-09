@@ -217,8 +217,8 @@ Checklist (file: `src/repo/feedback/feedback.repo.ts`, test: `feedback.repo.test
 - [x] `EXPLAIN` on the dev branch with seq scan off: the review list uses `reviews_product_id_created_at_idx`, buyer complaints use `complaints_buyer_id_idx`, the admin queue uses `complaints_status_opened_at_idx`, the thread uses `complaint_messages_complaint_id_created_at_idx`, and the report queue uses `reports_status_created_at_idx`.
 - [x] `bun run test:repo` (171 pass) and `bun run typecheck:repo` pass.
 
-Open gaps (need a decision, not fixed here):
-- Nothing stops two active complaints on one order. The schema has no index for it. A partial unique index on `complaints (order_id)` for the active statuses would close it, but that is a migration.
+Open gaps:
+- Closed in migration 0008: two active complaints on one order.
 - `insertReview` does not check that the order is completed. The spec puts that in the service, as the schema comment says.
 
 Commit: `feat(repo): add review and complaint queries`
@@ -283,13 +283,13 @@ Commit: `test(repo): verify table and job coverage`
 Follow-up (after the answers to the open questions):
 - [x] Media cleanup: migration `0007_media_destroyed_at.sql` adds `media_assets.destroyed_at`, a check that only a deleted asset can have it, and a partial index. `markMediaDeleted` now means "destroy is due". New: `listMediaAwaitingDestroy` and `markMediaDestroyed`. Applied to `chore-schema-v2` only; `database/tests` pass (8 migrations recorded, rerun applies nothing).
 - [x] Badge evaluation: `listBadgeChanges` returns the awards and revokes a farmer set is due, from `badges.criteria`. Supported keys are in `BADGE_CRITERIA_KEYS`; an empty, unknown or mistyped criterion throws instead of loosening the badge.
-- [x] `bun run test:repo` (217 pass) and `bun run typecheck:repo` pass.
+- [x] One active complaint per order: migration `0008_complaint_one_active_per_order.sql` (partial unique index on `complaints (order_id)` for open, farmer_responded and under_mediation). `openComplaint` fails with `UniqueViolationError` on a second one. A closed complaint allows a new one. Applied to `chore-schema-v2` only.
+- [x] `bun run test:repo` and `bun run typecheck:repo` pass.
 
 What is left:
-- Production still needs migrations `0001` to `0007` and the seed (the user applies those).
+- Production still needs migrations `0001` to `0008` and the seed (the user applies those).
 - `badges.criteria` is `{}` in the seed, so no badge is evaluated until an admin sets thresholds. `stock_always_updated`, `on_time_harvest` and `surplus_hero` depend on data outside `farmer_profiles` and have no evaluator yet.
 - `users.updated_at` moves on every presence flush, through the `set_updated_at` trigger. Do not read it as "profile last edited".
-- Two active complaints on one order (Phase 9) remain possible until a partial unique index is added (a migration).
 
 ## Out of scope
 

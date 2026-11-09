@@ -156,7 +156,9 @@ export interface NewComplaint {
  * Opens a complaint on the buyer's own order. The owner filter is in the INSERT ... SELECT, so a guessed order id
  * of another buyer writes nothing and returns undefined. The 3-day window and the escrow change to 'disputed'
  * belong to the service (escrow through setEscrowStatus, in the same withActor transaction).
- * Nothing in the schema stops a second active complaint on one order. See the checklist in Plan.md.
+ * A second active complaint (open, farmer_responded or under_mediation) on one order fails with
+ * UniqueViolationError, constraint complaints_one_active_per_order. The service maps it to its own message.
+ * After a terminal status a new complaint is allowed.
  */
 export function openComplaint(db: Executor, c: NewComplaint) {
   return db.insertInto('complaints')
