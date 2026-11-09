@@ -27,7 +27,9 @@ export function FormMasuk() {
     setMengirim(false);
 
     if (hasil.ok) {
-      router.push(pathAman(bacaParam("lanjut")) ?? "/");
+      // Gerbang profil: akun tanpa profil diisi dulu, akun lama diteruskan ke tujuannya.
+      const tujuan = pathAman(bacaParam("lanjut")) ?? "/";
+      router.push(`/daftar/lengkapi?lanjut=${encodeURIComponent(tujuan)}`);
       return;
     }
     setGalat(true);
