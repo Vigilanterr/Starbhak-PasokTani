@@ -1,11 +1,10 @@
 /**
  * Lapisan akses API autentikasi.
  *
- * TODO: sambungkan ke backend (belum ada). Sampai saat itu setiap fungsi di sini
- * hanya stub supaya alur UI bisa dijalankan:
- *  - `masuk` selalu gagal (menampilkan state galat pada halaman Masuk).
- *  - sisanya selalu berhasil.
+ * `masuk`, `daftar` dan `masukDenganGoogle` memakai Neon Auth. Sisanya masih stub.
  */
+
+import { authClient } from "@/lib/auth/client";
 
 export type Hasil = { ok: true } | { ok: false };
 
@@ -13,14 +12,26 @@ export async function masuk(input: {
   email: string;
   kataSandi: string;
 }): Promise<Hasil> {
-  void input;
-  return { ok: false };
+  const { error } = await authClient.signIn.email({
+    email: input.email,
+    password: input.kataSandi,
+  });
+  return error ? { ok: false } : { ok: true };
 }
 
+/** Mulai alur OAuth Google (Neon Auth). Browser dialihkan ke Google lalu kembali ke beranda. */
 export async function masukDenganGoogle(): Promise<void> {
-  // TODO: mulai alur OAuth Google.
+  await authClient.signIn.social({
+    provider: "google",
+    callbackURL: `${window.location.origin}/`,
+  });
 }
 
+/**
+ * Daftar dengan email + kata sandi lewat Neon Auth (Managed Better Auth).
+ * Field peran/toko/wilayah belum dikirim: Neon Auth hanya menyimpan nama + email,
+ * data profil itu perlu disimpan terpisah di backend.
+ */
 export async function daftar(input: {
   peran: "konsumen" | "umkm" | "petani";
   nama: string;
@@ -30,8 +41,12 @@ export async function daftar(input: {
   wilayah?: string;
   kecamatan?: string;
 }): Promise<Hasil> {
-  void input;
-  return { ok: true };
+  const { error } = await authClient.signUp.email({
+    name: input.nama,
+    email: input.email,
+    password: input.kataSandi,
+  });
+  return error ? { ok: false } : { ok: true };
 }
 
 /** Respons sengaja sama baik email terdaftar maupun tidak (mencegah user enumeration). */
