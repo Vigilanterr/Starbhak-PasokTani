@@ -10,7 +10,7 @@ import { listDistrictsForRegency, listRegencies } from '../identity/reference.re
 import {
   awardBadge, decideVerification, deleteHoliday, ensureFarmerProfile, findBadgeByCode,
   findFarmerProfile, insertBankAccount, insertHoliday, listActiveBadgesForFarmer,
-  listBankAccounts, listFarmersNear, listOperatingHours, listPendingVerifications,
+  listBadgeChanges, listBankAccounts, listFarmersNear, listOperatingHours, listPendingVerifications,
   listUpcomingHolidays, replaceOperatingHours, revokeBadge, setPrimaryBankAccount,
   submitVerification, updateFarmerProfile,
 } from './farmers.repo';
@@ -385,6 +385,68 @@ describe('badges', () => {
       expect(await listActiveBadgesForFarmer(trx, id!, 20)).toHaveLength(0);
 
       expect(await awardBadge(trx, { farmerId: id!, badgeId: badge.id, evaluationPeriod: '2026-12-01' })).toBeDefined();
+    });
+  });
+
+  test('badge changes list the awards and revokes a rerun would find, and nothing once applied', async () => {
+    await withRollback(async (trx) => {
+      const [good, weak, gone] = await authIds(trx, 3) as [string, string, string];
+      for (const id of [good, weak, gone]) await newFarmer(trx, id);
+      const code = `uji_${crypto.randomUUID().replaceAll('-', '_')}`;
+      const badge = await trx.insertInto('badges')
+        .values({ code, name: 'Uji', criteria: JSON.stringify({ min_completed_orders: 5, min_rating_avg: 4.5 }) })
+        .returning('id').executeTakeFirstOrThrow();
+      await sql`update farmer_profiles set completed_order_count = 6, rating_avg = 4.8 where user_id = any(${[good, gone]}::uuid[])`.execute(trx);
+      await sql`update farmer_profiles set completed_order_count = 6, rating_avg = 4.0 where user_id = ${weak}::uuid`.execute(trx);
+      const mine = async () => (await listBadgeChanges(trx, { code, afterFarmerId: null, limit: 10_000 }))!
+        .filter((c) => [good, weak, gone].includes(c.farmer_id));
+
+      expect((await mine()).map((c) => [c.farmer_id, c.action]).sort()).toEqual([[gone, 'award'], [good, 'award']].sort());
+
+      const held = await awardBadge(trx, { farmerId: gone, badgeId: badge.id, evaluationPeriod: '2026-11-01' });
+      await awardBadge(trx, { farmerId: good, badgeId: badge.id, evaluationPeriod: '2026-11-01' });
+      await sql`update users set deleted_at = now() where id = ${gone}::uuid`.execute(trx);
+      await awardBadge(trx, { farmerId: weak, badgeId: badge.id, evaluationPeriod: '2026-10-01' });
+
+      const changes = await mine();
+      expect(changes.map((c) => [c.farmer_id, c.action]).sort()).toEqual([[gone, 'revoke'], [weak, 'revoke']].sort());
+      expect(changes.find((c) => c.farmer_id === gone)!.farmer_badge_id).toBe(held!.id);
+
+      for (const c of changes) await revokeBadge(trx, { farmerBadgeId: c.farmer_badge_id!, reason: 'tidak lagi memenuhi' });
+      expect(await mine()).toEqual([]);
+    });
+  });
+
+  test('badge changes page by farmer id and return limit + 1', async () => {
+    await withRollback(async (trx) => {
+      const ids = await authIds(trx, 3);
+      for (const id of ids) await newFarmer(trx, id);
+      const code = `uji_${crypto.randomUUID().replaceAll('-', '_')}`;
+      await trx.insertInto('badges').values({ code, name: 'Halaman', criteria: JSON.stringify({ max_age_days: 1 }) }).execute();
+      const all = (await listBadgeChanges(trx, { code, afterFarmerId: null, limit: 10_000 }))!.map((c) => c.farmer_id);
+      expect(ids.every((id) => all.includes(id))).toBe(true);
+      const first = (await listBadgeChanges(trx, { code, afterFarmerId: null, limit: 2 }))!;
+      expect(first).toHaveLength(3);
+      const second = (await listBadgeChanges(trx, { code, afterFarmerId: first[1]!.farmer_id, limit: 2 }))!;
+      expect(second[0]!.farmer_id).toBe(first[2]!.farmer_id);
+      expect(second[0]!.farmer_id).not.toBe(first[1]!.farmer_id);
+    });
+  });
+
+  test('badge changes refuse unusable criteria and skip unknown or manual badges', async () => {
+    await withRollback(async (trx) => {
+      const mk = (criteria: unknown, extra: object = {}) => {
+        const code = `uji_${crypto.randomUUID().replaceAll('-', '_')}`;
+        return trx.insertInto('badges').values({ code, name: 'x', criteria: JSON.stringify(criteria), ...extra }).execute().then(() => code);
+      };
+      const run = (code: string) => listBadgeChanges(trx, { code, afterFarmerId: null, limit: 1 });
+      await expect(run(await mk({}))).rejects.toThrow(/criteria is empty/);
+      await expect(run(await mk({ min_completed_ordres: 5 }))).rejects.toThrow(/unknown criterion min_completed_ordres/);
+      await expect(run(await mk({ min_rating_avg: '4.5' }))).rejects.toThrow(/non-negative number/);
+      await expect(run(await mk({ verified: false }))).rejects.toThrow(/verified must be true/);
+      expect(await run(await mk({ verified: true }, { is_automatic: false }))).toBeUndefined();
+      expect(await run(await mk({ verified: true }, { is_active: false }))).toBeUndefined();
+      expect(await run(`tidak_ada_${crypto.randomUUID()}`)).toBeUndefined();
     });
   });
 });

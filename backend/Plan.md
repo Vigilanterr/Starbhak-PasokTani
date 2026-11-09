@@ -280,11 +280,16 @@ Checklist (test: `src/repo/coverage.repo.test.ts`):
 
 Commit: `test(repo): verify table and job coverage`
 
-What is left (each needs a decision, so none is fixed here):
-- Media cleanup covers pending uploads only. The docs have `deleted` mean "parent gone, destroy on Cloudinary", while `markMediaDeleted` sets it after the destroy, and `media_assets` has no column to tell the two apart. The second half of the job needs a new status or a `destroyed_at` column (a migration).
-- Badge evaluation has `awardBadge` and `revokeBadge`, but no query that picks the farmers to award or revoke, because `badges.criteria` is `{}` until admins set the thresholds.
-- `users.updated_at` moves on every presence flush, through the `set_updated_at` trigger. Harmless today, but do not read it as "profile last edited".
-- Still open from earlier phases: two active complaints on one order (Phase 9), production migrations, and the two open questions below.
+Follow-up (after the answers to the open questions):
+- [x] Media cleanup: migration `0007_media_destroyed_at.sql` adds `media_assets.destroyed_at`, a check that only a deleted asset can have it, and a partial index. `markMediaDeleted` now means "destroy is due". New: `listMediaAwaitingDestroy` and `markMediaDestroyed`. Applied to `chore-schema-v2` only; `database/tests` pass (8 migrations recorded, rerun applies nothing).
+- [x] Badge evaluation: `listBadgeChanges` returns the awards and revokes a farmer set is due, from `badges.criteria`. Supported keys are in `BADGE_CRITERIA_KEYS`; an empty, unknown or mistyped criterion throws instead of loosening the badge.
+- [x] `bun run test:repo` (217 pass) and `bun run typecheck:repo` pass.
+
+What is left:
+- Production still needs migrations `0001` to `0007` and the seed (the user applies those).
+- `badges.criteria` is `{}` in the seed, so no badge is evaluated until an admin sets thresholds. `stock_always_updated`, `on_time_harvest` and `surplus_hero` depend on data outside `farmer_profiles` and have no evaluator yet.
+- `users.updated_at` moves on every presence flush, through the `set_updated_at` trigger. Do not read it as "profile last edited".
+- Two active complaints on one order (Phase 9) remain possible until a partial unique index is added (a migration).
 
 ## Out of scope
 
@@ -293,7 +298,7 @@ What is left (each needs a decision, so none is fixed here):
 - Translating English column names to the frontend's Indonesian types (`documentation.md` A8 puts that in the API layer).
 - Applying migrations to production. That needs the user.
 
-## Open questions
+## Decisions on the former open questions
 
-1. Does the backend stay in `backend/` on Hono, or move to Next.js route handlers as the docs say? The repo works with either, but this decides how the code gets imported.
-2. Should the app log in as `app_rw`? The role exists but cannot log in yet. Until it can, the repo runs as the owner and the no-`DELETE` grants are not enforced.
+1. The backend stays in `backend/` (Hono). The repo imports neither, so it can still move later.
+2. The app keeps running as the database owner for now. The `app_rw` no-`DELETE` grants are not enforced until it can log in.

@@ -485,6 +485,10 @@ export interface MediaAssets {
    */
   delivery_type: Generated<string>;
   /**
+   * Set after the Cloudinary asset was destroyed. status = deleted with this empty means the destroy is still due
+   */
+  destroyed_at: Timestamp | null;
+  /**
    * Original format; delivered with f_auto,q_auto
    */
   format: string | null;

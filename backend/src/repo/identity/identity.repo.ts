@@ -83,6 +83,35 @@ export async function markUsersSeen(db: Executor, userIds: string[]): Promise<nu
   return Number(result.numUpdatedRows);
 }
 
+/**
+ * Deleted media whose Cloudinary asset has not been destroyed yet, oldest first. Plain read, no lock: the job
+ * takes pg_try_advisory_xact_lock so one instance runs, and a Cloudinary destroy is safe to repeat. A lock would
+ * be released before the network call anyway. Matches media_assets_awaiting_destroy.
+ */
+export function listMediaAwaitingDestroy(db: Executor, limit: number) {
+  return db.selectFrom('media_assets')
+    .select(['id', 'owner_id', 'kind', 'cloudinary_public_id', 'delivery_type', 'created_at'])
+    .where('status', '=', 'deleted')
+    .where('destroyed_at', 'is', null)
+    .orderBy('created_at', 'asc')
+    .orderBy('id', 'asc')
+    .limit(limit)
+    .execute();
+}
+
+/** Records that the Cloudinary asset is gone. Returns the ids that changed; a replay returns an empty list. */
+export async function markMediaDestroyed(db: Executor, ids: string[]): Promise<string[]> {
+  if (ids.length === 0) return [];
+  const rows = await db.updateTable('media_assets')
+    .set({ destroyed_at: sql<Date>`now()` })
+    .where('id', 'in', ids)
+    .where('status', '=', 'deleted')
+    .where('destroyed_at', 'is', null)
+    .returning('id')
+    .execute();
+  return rows.map((r) => r.id);
+}
+
 // ---------- Addresses ----------
 
 export const ADDRESS_COLUMNS = [
@@ -248,7 +277,8 @@ export function listStalePendingMedia(db: Executor, limit: number) {
 }
 
 /**
- * Marks media deleted after the job has removed the Cloudinary asset.
+ * Marks media as deleted: the parent is gone (or the upload was abandoned), so the Cloudinary asset is now due
+ * to be destroyed. It does not mean the asset is destroyed yet; markMediaDestroyed records that.
  * Returns the ids that changed. An empty list is not sent to Postgres.
  */
 export async function markMediaDeleted(db: Executor, ids: string[]): Promise<string[]> {

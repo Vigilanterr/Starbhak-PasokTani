@@ -6,8 +6,8 @@ import {
   expireDueBatches, lockBatchesForSurplusPass, releaseExpiredReservations, setBatchSurplusDiscount,
 } from './catalog/catalog.repo';
 import { claimOutboxEvents } from './comms/comms.repo';
-import { awardBadge, revokeBadge } from './farmers/farmers.repo';
-import { listStalePendingMedia, markMediaDeleted, markUsersSeen } from './identity/identity.repo';
+import { awardBadge, listBadgeChanges, revokeBadge } from './farmers/farmers.repo';
+import { listMediaAwaitingDestroy, listStalePendingMedia, markMediaDeleted, markMediaDestroyed, markUsersSeen } from './identity/identity.repo';
 import { lockOverdueConfirmedOrders, lockUnpaidOrders } from './orders/orders.repo';
 import { lockEscrowReleaseCandidates } from './payments/payments.repo';
 import { lockOverdueRemainders } from './waitlist/waitlist.repo';
@@ -23,9 +23,9 @@ const JOB_QUERIES: Record<string, unknown[]> = {
   'Escrow auto-release': [lockEscrowReleaseCandidates],
   'Auto-cancel': [lockOverdueConfirmedOrders],
   'Outbox sweep': [claimOutboxEvents],
-  'Badge evaluation': [awardBadge, revokeBadge],
+  'Badge evaluation': [listBadgeChanges, awardBadge, revokeBadge],
   'Analytics rollup + reconciliation': [flushProductDayCounters, rollupSalesForDay, rollupSubscriptionsForDay, findCounterDrift],
-  'Media cleanup': [listStalePendingMedia, markMediaDeleted],
+  'Media cleanup': [listStalePendingMedia, markMediaDeleted, listMediaAwaitingDestroy, markMediaDestroyed],
   'Presence flush': [markUsersSeen],
 };
 

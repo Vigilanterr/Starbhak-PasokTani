@@ -361,6 +361,90 @@ export function listActiveBadgesForFarmer(db: Executor, farmerId: string, limit:
 }
 
 /**
+ * Thresholds a badge can hold in badges.criteria. Every key present must hold for a farmer to qualify.
+ * Only data on farmer_profiles is covered. Badges that need other sources (stock updates, harvest timing,
+ * surplus sales) keep criteria '{}' and are not evaluable here.
+ */
+export const BADGE_CRITERIA_KEYS = [
+  'min_completed_orders', // completed_order_count >= n
+  'min_rating_count',     // rating_count >= n
+  'min_rating_avg',       // rating_avg >= n
+  'max_avg_response_minutes', // avg_response_minutes <= n (a farmer with no reply data does not qualify)
+  'min_age_days',         // shop created at least n days ago
+  'max_age_days',         // shop created at most n days ago
+  'verified',             // true: verification_status = approved
+] as const;
+
+type BadgeCriteria = Partial<Record<(typeof BADGE_CRITERIA_KEYS)[number], number | boolean>>;
+
+/**
+ * Turns badges.criteria into one SQL condition on farmer_profiles f. Throws RangeError for an empty object or an
+ * unknown or mistyped key, because a typo would otherwise silently loosen the badge.
+ */
+function badgeCondition(code: string, criteria: unknown) {
+  if (typeof criteria !== 'object' || criteria === null || Array.isArray(criteria)) {
+    throw new RangeError(`Badge ${code}: criteria is not an object`);
+  }
+  const entries = Object.entries(criteria as Record<string, unknown>);
+  if (entries.length === 0) throw new RangeError(`Badge ${code}: criteria is empty, so it cannot be evaluated`);
+  const parts = entries.map(([key, value]) => {
+    if (!(BADGE_CRITERIA_KEYS as readonly string[]).includes(key)) throw new RangeError(`Badge ${code}: unknown criterion ${key}`);
+    if (key === 'verified') {
+      if (value !== true) throw new RangeError(`Badge ${code}: verified must be true`);
+      return sql<boolean>`f.verification_status = 'approved'`;
+    }
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+      throw new RangeError(`Badge ${code}: ${key} must be a non-negative number`);
+    }
+    switch (key as keyof BadgeCriteria) {
+      case 'min_completed_orders': return sql<boolean>`f.completed_order_count >= ${value}`;
+      case 'min_rating_count': return sql<boolean>`f.rating_count >= ${value}`;
+      case 'min_rating_avg': return sql<boolean>`f.rating_avg >= ${value}`;
+      case 'max_avg_response_minutes': return sql<boolean>`f.avg_response_minutes <= ${value}`;
+      case 'min_age_days': return sql<boolean>`f.created_at <= now() - make_interval(days => ${value}::int)`;
+      default: return sql<boolean>`f.created_at >= now() - make_interval(days => ${value}::int)`;
+    }
+  });
+  return sql<boolean>`(${sql.join(parts, sql` and `)})`;
+}
+
+export interface BadgeChange {
+  farmer_id: string;
+  action: 'award' | 'revoke';
+  /** The active award to pass to revokeBadge. Null for an award. */
+  farmer_badge_id: string | null;
+}
+
+/**
+ * Monthly job: the farmers whose badge is out of date, as awards (qualifies, does not hold it) and revokes
+ * (holds it, no longer qualifies). Read only; the job applies each with awardBadge or revokeBadge, so a rerun
+ * finds nothing left. Keyset on farmer id (pass the last row's farmer_id), fetches limit + 1.
+ * undefined when the badge is unknown, inactive or manual. Throws RangeError for unusable criteria.
+ * A soft-deleted user never qualifies, so a held badge is revoked.
+ */
+export async function listBadgeChanges(db: Executor, a: { code: string; afterFarmerId: string | null; limit: number }) {
+  const badge = await db.selectFrom('badges').select(['id', 'criteria'])
+    .where('code', '=', a.code).where('is_active', '=', true).where('is_automatic', '=', true)
+    .executeTakeFirst();
+  if (!badge) return undefined;
+  const qualifies = sql<boolean>`(u.deleted_at is null and ${badgeCondition(a.code, badge.criteria)})`;
+  let q = db.selectFrom('farmer_profiles as f')
+    .innerJoin('users as u', 'u.id', 'f.user_id')
+    .leftJoin('farmer_badges as fb', (join) => join
+      .onRef('fb.farmer_id', '=', 'f.user_id')
+      .on('fb.badge_id', '=', badge.id)
+      .on('fb.revoked_at', 'is', null))
+    .select([
+      'f.user_id as farmer_id',
+      sql<'award' | 'revoke'>`case when fb.id is null then 'award' else 'revoke' end`.as('action'),
+      'fb.id as farmer_badge_id',
+    ])
+    .where(sql<boolean>`coalesce(${qualifies}, false) <> (fb.id is not null)`);
+  if (a.afterFarmerId) q = q.where('f.user_id', '>', a.afterFarmerId);
+  return q.orderBy('f.user_id', 'asc').limit(a.limit + 1).execute() as Promise<BadgeChange[]>;
+}
+
+/**
  * Awards a badge. A replay while the badge is still active is a no-op (undefined).
  * The conflict target repeats the partial index predicate: revoked_at IS NULL.
  */

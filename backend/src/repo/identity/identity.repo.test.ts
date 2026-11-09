@@ -1,7 +1,7 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { sql } from 'kysely';
 import { closeDb, getDb } from '../db';
-import { ForeignKeyViolationError, UniqueViolationError, mapDbError } from '../errors';
+import { CheckViolationError, ForeignKeyViolationError, UniqueViolationError, mapDbError } from '../errors';
 import type { Executor } from '../executor';
 import { requireTransaction } from '../executor';
 import { withRollback } from '../test-utils';
@@ -9,7 +9,7 @@ import { findRegencyBySlug, listDistrictsForRegency, listRegencies } from './ref
 import {
   deletePushSubscription, ensureUser, findAddressForUser, findUserById, findUserWithEmail,
   insertAddress, insertMediaAsset, listAddressesForUser, listNotificationPreferences,
-  listPushSubscriptions, listStalePendingMedia, markMediaDeleted, markMediaReady,
+  listMediaAwaitingDestroy, listPushSubscriptions, listStalePendingMedia, markMediaDeleted, markMediaDestroyed, markMediaReady,
   markPushSucceeded, markUserOnboarded, markUsersSeen, setDefaultAddress, upsertNotificationPreference,
   upsertPushSubscription,
 } from './identity.repo';
@@ -277,6 +277,38 @@ describe('media', () => {
       expect(await markMediaDeleted(trx, [])).toEqual([]);
       expect((await listStalePendingMedia(trx, 1000)).map((r) => r.id)).not.toContain(old.id);
     });
+  });
+
+  test('a deleted asset stays due until it is destroyed, and a destroy is recorded once', async () => {
+    await withRollback(async (trx) => {
+      const [owner] = await authIds(trx, 1);
+      await ensureUser(trx, { id: owner!, fullName: 'Hancur', role: 'farmer' });
+      const media = await insertMediaAsset(trx, { ownerId: owner!, kind: 'review_photo', cloudinaryPublicId: `test/${owner}/gone` });
+      const live = await insertMediaAsset(trx, { ownerId: owner!, kind: 'review_photo', cloudinaryPublicId: `test/${owner}/live` });
+      const due = async () => (await listMediaAwaitingDestroy(trx, 10_000)).map((r) => r.id);
+
+      expect(await due()).not.toContain(media.id);
+      await markMediaDeleted(trx, [media.id]);
+      expect(await due()).toContain(media.id);
+      expect(await due()).not.toContain(live.id);
+
+      expect(await markMediaDestroyed(trx, [])).toEqual([]);
+      expect(await markMediaDestroyed(trx, [live.id])).toEqual([]); // not deleted, so nothing to record
+      expect(await markMediaDestroyed(trx, [media.id])).toEqual([media.id]);
+      expect(await markMediaDestroyed(trx, [media.id])).toEqual([]);
+      expect(await due()).not.toContain(media.id);
+    });
+  });
+
+  test('destroyed_at is only allowed on a deleted asset', async () => {
+    const err = await withRollback(async (trx) => {
+      const [owner] = await authIds(trx, 1);
+      await ensureUser(trx, { id: owner!, fullName: 'Aturan', role: 'farmer' });
+      const media = await insertMediaAsset(trx, { ownerId: owner!, kind: 'review_photo', cloudinaryPublicId: `test/${owner}/chk` });
+      await sql`update media_assets set destroyed_at = now() where id = ${media.id}::uuid`.execute(trx);
+    }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(CheckViolationError);
+    expect((err as CheckViolationError).constraint).toBe('chk_destroyed_needs_deleted');
   });
 });
 
