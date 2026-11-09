@@ -3,3 +3,4 @@ starbhak-kompas-desa/
 .env.local
 node_modules/
 dist/
+.vercel
