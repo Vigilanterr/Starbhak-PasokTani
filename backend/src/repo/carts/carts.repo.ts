@@ -107,26 +107,30 @@ export type AddCartItem = CartItemTarget & { buyerId: string; cartId: string; qu
 
 /**
  * Adds a line, or adds to the quantity if the cart already holds that product or wait list.
- * Returns undefined when the cart is not the buyer's. Adding to a cart reserves no stock.
- * chk_item_qty rejects a quantity of zero or less with CheckViolationError.
+ * One statement: the row is selected from carts with the owner filter, then inserted. If the buyer
+ * does not own the cart, the select returns no row, nothing is written, and the result is undefined.
+ * Adding to a cart reserves no stock. chk_item_qty rejects a quantity of zero or less with CheckViolationError.
  */
-export async function addCartItem(db: Executor, a: AddCartItem) {
-  const cart = await findCartForBuyer(db, a.cartId, a.buyerId);
-  if (!cart) return undefined;
-
+export function addCartItem(db: Executor, a: AddCartItem) {
   const isProduct = 'productId' in a;
+  const source = db.selectFrom('carts')
+    .select([
+      'carts.id as cart_id',
+      sql<string | null>`${isProduct ? a.productId : null}::uuid`.as('product_id'),
+      sql<string | null>`${isProduct ? null : a.waitlistId}::uuid`.as('waitlist_id'),
+      sql<string>`${qty(a.quantity)}::numeric`.as('quantity'),
+    ])
+    .where('carts.id', '=', a.cartId)
+    .where('carts.buyer_id', '=', a.buyerId);
+
   return db.insertInto('cart_items')
-    .values({
-      cart_id: a.cartId,
-      product_id: isProduct ? a.productId : null,
-      waitlist_id: isProduct ? null : a.waitlistId,
-      quantity: qty(a.quantity),
-    })
+    .columns(['cart_id', 'product_id', 'waitlist_id', 'quantity'])
+    .expression(source)
     .onConflict((oc) => (isProduct
       ? oc.columns(['cart_id', 'product_id']).doUpdateSet({ quantity: sql`cart_items.quantity + excluded.quantity` })
       : oc.columns(['cart_id', 'waitlist_id']).doUpdateSet({ quantity: sql`cart_items.quantity + excluded.quantity` })))
     .returning(CART_ITEM_COLUMNS)
-    .executeTakeFirstOrThrow();
+    .executeTakeFirst();
 }
 
 /** Sets a line's quantity. undefined when the item is not in the buyer's cart. */
