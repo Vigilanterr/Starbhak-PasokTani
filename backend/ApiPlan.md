@@ -158,7 +158,7 @@ Commit: `refactor(api)!: remove the schema v1 API and deploy the new skeleton`
 - [x] Frontend: wire `masuk()` to `authClient.signIn.email`, and send the role and shop fields that `daftar()` currently drops by calling `POST /me/onboarding` after sign-up. Sign-in now goes through the gate page first. Uncommitted: it sits on the existing Neon Auth wiring in `auth-api.ts`, which is not yet committed.
 - [x] Frontend: `/daftar/lengkapi`, a gate page for anyone signed in without a profile (Google sign-ins, or sign-up that had no session yet). Onboarded accounts go straight to `?lanjut=` or `/`.
 - [x] Frontend: `src/proxy.ts` for early redirects from the cookie: guests off the auth pages, signed-out users off `/daftar/lengkapi`. The role check in each group's layout comes with the `(pembeli)` and `(petani)` groups in Phase 4. Read from `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`.
-- [ ] Add the Vercel preview and production domains to Neon Auth trusted domains, on both branches. **Needs the user:** the preview domain is not known until the deploy.
+- [~] Trusted domains: each preview URL needs its own entry on dev (`br-icy-sea-azw329fy`). Added so far: three preview origins from this session. Production is not done and needs an explicit yes. A stable branch alias would stop this from repeating.
 - [ ] One real-session test built from `test-neon-signup.ts`, on the dev branch only. Not written: that script imports `src/lib/neon-auth.js`, which Phase 1 deleted, and each run creates a real account on the dev auth.
 
 Done when: a browser sign-up on a preview deployment reaches `GET /api/v1/me` with the right role.
