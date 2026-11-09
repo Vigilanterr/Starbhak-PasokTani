@@ -194,13 +194,20 @@ Commit: `feat(api): serve the public catalog from the repo`
 
 ### Phase 4: Buyer account and carts
 
-- [ ] Addresses: `insertAddress`, `listAddressesForUser`, `setDefaultAddress`.
-- [ ] Temporary cart and items: `getOrCreateTemporaryCart`, `addCartItem`, `setCartItemQuantity`, `removeCartItem`, `listCartItems`.
-- [ ] Recipe carts: `createRecipeCart`, `listRecipeCarts`, `updateRecipeCart`, `deleteRecipeCart`.
-- [ ] Alternatives: `addAlternative`, `reorderAlternatives`.
-- [ ] Follow: `followWaitlist`, `unfollowWaitlist`.
-- [ ] Screens: wire `kotak-beli` and `dialog-keranjang` to the cart API. Add the `(pembeli)` layout, `/keranjang`, and `/akun/alamat`. The cart count in `header-situs` comes from the API.
-- [ ] Recipe carts and alternatives stay API only unless the demo shows them.
+- [x] Addresses: `insertAddress`, `listAddressesForUser`, `setDefaultAddress` (already in the repo). NEW `listAddressViewsForUser` for the screen (region names). Routes `GET/POST /me/alamat`, `POST /me/alamat/:id/utama`. The first address is the default without asking.
+- [x] Temporary cart and items: `getOrCreateTemporaryCart`, `addCartItem`, `setCartItemQuantity`, `removeCartItem`, `listCartItems` (already in the repo). NEW `listCartLines` for the screen: product fields and the subtotal, rounded in SQL. Routes `GET /keranjang`, `POST /keranjang/item`, `PATCH|DELETE /keranjang/item/:itemId`. The quantity check uses the product's minimum and stock.
+- [x] Recipe carts: `createRecipeCart`, `listRecipeCarts`, `updateRecipeCart`, `deleteRecipeCart` (already in the repo). Routes `/keranjang-resep` and `/keranjang-resep/:id`, with the same item routes under `/keranjang-resep/:id/item`.
+- [x] Alternatives: `addAlternative`, `reorderAlternatives` (already in the repo). Routes `POST /keranjang/item/:itemId/alternatif` and `PUT` (reorder). The request sends product ids; the service maps them to alternative row ids. Three per item.
+- [x] Follow: `followWaitlist`, `unfollowWaitlist` (already in the repo). Routes `POST|DELETE /daftar-tunggu/:id/ikuti`, idempotent.
+- [x] Screens: `KotakBeli` and `DialogKeranjang` call the cart API (a guest gets a 401 and goes to sign-in). `(pembeli)` layout checks the profile, `/keranjang`, and `/akun/alamat` are built. The header shows the cart count for signed-in buyers and hides Masuk and Daftar.
+- [x] Recipe carts and alternatives stay API only. The screens do not use them.
+
+Decisions made while building it:
+
+- Routes are split by role. `src/routes/pembeli.ts` runs session, onboarding and `requireRole('consumer', 'umkm')` on each route. Producers and admins get 403.
+- The wait-list line is not created through the API yet. The repo supports it, and `listCartLines` leaves such lines out rather than showing a broken row.
+- Cart lines show the base price. Wholesale and Surplus prices come with the checkout preview in Phase 5.
+- Verified: `bun run test:repo` 241 pass. `bun run test:api` 119 pass on `api-test`, including `tests/pembeli.live.test.ts`. `next build` passes. Locally, guest routes redirect to sign-in and the guest header shows Masuk and Daftar. **Not done:** a signed-in browser run. It needs a sign-in on the dev branch and a preview deployment.
 
 Commit: `feat(api): add buyer addresses and carts`
 

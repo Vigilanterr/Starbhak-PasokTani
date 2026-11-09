@@ -264,3 +264,62 @@ export type HasilCari = HasilHalaman<ProdukTampil> & {
   dimaknai: string | null;
   saran: string[];
 };
+
+// ---------- Pembeli: alamat dan keranjang ----------
+
+export type Alamat = {
+  id: string;
+  label: string;
+  namaPenerima: string;
+  telepon: string;
+  /** Slug kabupaten, mis. `kabupaten-bandung`. */
+  kabupaten: string;
+  namaKabupaten: string;
+  kecamatan: string;
+  jalan: string;
+  kodePos: string | null;
+  catatan: string | null;
+  utama: boolean;
+};
+
+export type BarisKeranjang = {
+  id: string;
+  produkId: string;
+  slug: string;
+  nama: string;
+  satuan: Satuan;
+  /** Harga dasar per satuan. Harga grosir dan Surplus dihitung saat checkout. */
+  harga: number;
+  jumlah: number;
+  /** Harga dasar x jumlah, dibulatkan. */
+  subtotal: number;
+  namaToko: string;
+  stok: number;
+  minPembelian: number;
+  /** Produk masih dijual dan ada stok. */
+  tersedia: boolean;
+  /** Id produk alternatif, urut prioritas (1 = pertama). */
+  alternatif: string[];
+};
+
+export type Keranjang = {
+  id: string;
+  jenis: "sementara" | "resep";
+  /** Nama grup. Hanya untuk Keranjang Resep. */
+  nama: string | null;
+  catatan: string | null;
+  baris: BarisKeranjang[];
+  subtotal: number;
+};
+
+export type KeranjangResepRingkas = {
+  id: string;
+  nama: string;
+  catatan: string | null;
+};
+
+export type HalamanKeranjangResep = {
+  item: KeranjangResepRingkas[];
+  /** Id untuk meminta halaman berikutnya, null bila sudah habis. */
+  berikutnya: string | null;
+};

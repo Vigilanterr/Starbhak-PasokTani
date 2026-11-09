@@ -187,6 +187,34 @@ export function findAddressForUser(db: Executor, addressId: string, userId: stri
 }
 
 /**
+ * The user's addresses with the region names a screen prints (regency slug and name, district name), one query.
+ * Default first, then id. Read-only: the joins use the regency and district codes the address already holds.
+ */
+export function listAddressViewsForUser(db: Executor, userId: string, limit: number) {
+  return db.selectFrom('addresses')
+    .innerJoin('regencies', 'regencies.code', 'addresses.regency_code')
+    .innerJoin('districts', 'districts.code', 'addresses.district_code')
+    .select([
+      'addresses.id as id',
+      'addresses.label as label',
+      'addresses.recipient_name as recipient_name',
+      'addresses.phone as phone',
+      'addresses.street as street',
+      'addresses.postal_code as postal_code',
+      'addresses.notes as notes',
+      'addresses.is_default as is_default',
+      'regencies.slug as regency_slug',
+      'regencies.name as regency_name',
+      'districts.name as district_name',
+    ])
+    .where('addresses.user_id', '=', userId)
+    .orderBy('addresses.is_default', 'desc')
+    .orderBy('addresses.id', 'asc')
+    .limit(limit)
+    .execute();
+}
+
+/**
  * Makes one address the user's default. Must run inside a transaction.
  *
  * addresses_one_default is not deferrable, so the old default is cleared before the new one

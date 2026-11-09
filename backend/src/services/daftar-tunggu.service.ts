@@ -4,7 +4,10 @@ import { statusDbDari } from '../mappers/enum';
 import { daftarTungguTampil, entriDari, kabarDari } from '../mappers/daftar-tunggu';
 import type { Executor } from '../repo/executor';
 import { listBadgeCodesForFarmers } from '../repo/farmers/farmer-read.repo';
-import { listWaitlistTimeline } from '../repo/waitlist/waitlist.repo';
+import { withTransaction } from '../repo/executor';
+import {
+  findWaitlistById, followWaitlist, listWaitlistTimeline, unfollowWaitlist,
+} from '../repo/waitlist/waitlist.repo';
 import {
   findWaitlistPublic, listPublicEventMedia, listWaitlistCards, listWaitlistCardsForFarmer,
   type WaitlistCardRow, type WaitlistSort,
@@ -100,3 +103,22 @@ export async function daftarTungguPetani(db: Executor, farmerId: string): Promis
   return tampilkanDaftar(db, rows.filter((r) => r.status !== 'ready_to_harvest'), { linimasa: false });
 }
 
+/**
+ * Follows a wait list. Idempotent: following twice leaves one follow, and the count trigger fires once.
+ * Any signed-in buyer may follow, so the route checks only the role.
+ */
+export function ikutiDaftarTunggu(db: Executor, buyerId: string, waitlistId: string): Promise<{ mengikuti: true }> {
+  return withTransaction(db, async (trx) => {
+    if (!(await findWaitlistById(trx, waitlistId))) throw notFound('Daftar tunggu');
+    await followWaitlist(trx, buyerId, waitlistId); // undefined when already following: nothing to do
+    return { mengikuti: true as const };
+  });
+}
+
+/** Stops following. Idempotent, so a repeat returns the same answer. */
+export function berhentiIkutiDaftarTunggu(db: Executor, buyerId: string, waitlistId: string): Promise<{ mengikuti: false }> {
+  return withTransaction(db, async (trx) => {
+    await unfollowWaitlist(trx, buyerId, waitlistId);
+    return { mengikuti: false as const };
+  });
+}

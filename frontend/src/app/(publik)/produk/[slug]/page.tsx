@@ -54,6 +54,7 @@ async function IsiHalaman({ params }: PageProps<"/produk/[slug]">) {
 
   const s = LABEL_SATUAN[produk.satuan];
   const dataBeli: DataBeli = {
+    id: produk.id,
     slug: produk.slug,
     nama: produk.nama,
     satuan: produk.satuan,

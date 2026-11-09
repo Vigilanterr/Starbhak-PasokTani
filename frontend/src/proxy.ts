@@ -11,7 +11,7 @@ const PREFIX_SESI = "__Secure-neon-auth.";
 const HANYA_TAMU = ["/masuk", "/daftar", "/lupa-sandi", "/atur-ulang-sandi"];
 
 /** Halaman yang butuh sesi. Tanpa sesi, dikirim ke masuk dengan tujuan kembali. */
-const BUTUH_SESI = ["/daftar/lengkapi"];
+const BUTUH_SESI = ["/daftar/lengkapi", "/keranjang", "/akun"];
 
 const cocok = (path: string, daftar: string[]) =>
   daftar.some((awal) => path === awal || path.startsWith(`${awal}/`));
@@ -35,5 +35,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/masuk", "/daftar/:path*", "/lupa-sandi", "/atur-ulang-sandi"],
+  matcher: ["/masuk", "/daftar/:path*", "/lupa-sandi", "/atur-ulang-sandi", "/keranjang", "/akun/:path*"],
 };

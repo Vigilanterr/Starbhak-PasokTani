@@ -22,6 +22,18 @@ afterAll(() => db.destroy());
 const SESSION_ROUTES: { name: string; method: 'GET' | 'POST'; path: string; body?: unknown }[] = [
   { name: 'GET /me', method: 'GET', path: '/api/v1/me' },
   { name: 'POST /me/onboarding', method: 'POST', path: '/api/v1/me/onboarding', body: { peran: 'konsumen', nama: 'Ani' } },
+  { name: 'GET /me/alamat', method: 'GET', path: '/api/v1/me/alamat' },
+  { name: 'POST /me/alamat', method: 'POST', path: '/api/v1/me/alamat', body: { label: 'Rumah' } },
+  { name: 'POST /me/alamat/:id/utama', method: 'POST', path: '/api/v1/me/alamat/0190a7c2-0000-7000-8000-000000000001/utama' },
+  { name: 'GET /keranjang', method: 'GET', path: '/api/v1/keranjang' },
+  { name: 'POST /keranjang/item', method: 'POST', path: '/api/v1/keranjang/item', body: { produkId: '0190a7c2-0000-7000-8000-000000000002', jumlah: 1 } },
+  { name: 'PATCH /keranjang/item/:itemId', method: 'PATCH', path: '/api/v1/keranjang/item/0190a7c2-0000-7000-8000-000000000003', body: { jumlah: 2 } },
+  { name: 'DELETE /keranjang/item/:itemId', method: 'DELETE', path: '/api/v1/keranjang/item/0190a7c2-0000-7000-8000-000000000003' },
+  { name: 'GET /keranjang-resep', method: 'GET', path: '/api/v1/keranjang-resep' },
+  { name: 'POST /keranjang-resep', method: 'POST', path: '/api/v1/keranjang-resep', body: { nama: 'Nasi Goreng' } },
+  { name: 'GET /keranjang-resep/:id', method: 'GET', path: '/api/v1/keranjang-resep/0190a7c2-0000-7000-8000-000000000004' },
+  { name: 'POST /daftar-tunggu/:id/ikuti', method: 'POST', path: '/api/v1/daftar-tunggu/0190a7c2-0000-7000-8000-000000000005/ikuti' },
+  { name: 'DELETE /daftar-tunggu/:id/ikuti', method: 'DELETE', path: '/api/v1/daftar-tunggu/0190a7c2-0000-7000-8000-000000000005/ikuti' },
 ];
 
 describe('route matrix: no session', () => {

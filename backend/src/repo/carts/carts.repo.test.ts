@@ -10,7 +10,7 @@ import { listDistrictsForRegency, listRegencies } from '../identity/reference.re
 import { insertWaitlist } from '../waitlist/waitlist.repo';
 import {
   addAlternative, addCartItem, createRecipeCart, deleteRecipeCart, findCartForBuyer,
-  getOrCreateTemporaryCart, listCartAlternatives, listCartItems, listRecipeCarts,
+  getOrCreateTemporaryCart, listCartAlternatives, listCartItems, listCartLines, listRecipeCarts,
   removeCartItem, reorderAlternatives, setCartItemQuantity, updateRecipeCart,
 } from './carts.repo';
 
@@ -384,6 +384,49 @@ describe('alternatives', () => {
 
       expect(await listCartAlternatives(trx, { buyerId: buyerId!, cartId: cart.id, limit: 10 })).toHaveLength(1);
       expect(await listCartAlternatives(trx, { buyerId: otherId!, cartId: cart.id, limit: 10 })).toHaveLength(0);
+    });
+  });
+});
+
+describe('cart lines', () => {
+  test('one query returns each line with its product fields, shop name and the subtotal rounded in SQL', async () => {
+    await withRollback(async (trx) => {
+      const [farmerId, buyerId] = await authIds(trx, 2);
+      await farmer(trx, farmerId!);
+      await buyer(trx, buyerId!);
+      const p = await product(trx, farmerId!); // Bawang Merah, 30000 per kg
+      const cart = await getOrCreateTemporaryCart(trx, buyerId!);
+      await addCartItem(trx, { buyerId: buyerId!, cartId: cart.id, productId: p.id, quantity: '2.500' });
+
+      const lines = await listCartLines(trx, { cartId: cart.id, limit: 10 });
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toMatchObject({
+        product_id: p.id,
+        slug: p.slug,
+        name: 'Bawang Merah',
+        unit: 'kg',
+        status: 'active',
+        price: '30000',
+        quantity: '2.500',
+        shop_name: 'Tani Keranjang',
+        subtotal: '75000',
+      });
+    });
+  });
+
+  test('lines of another cart are not returned', async () => {
+    await withRollback(async (trx) => {
+      const [farmerId, buyerId, otherId] = await authIds(trx, 3);
+      await farmer(trx, farmerId!);
+      await buyer(trx, buyerId!);
+      await buyer(trx, otherId!);
+      const p = await product(trx, farmerId!);
+      const mine = await getOrCreateTemporaryCart(trx, buyerId!);
+      const theirs = await getOrCreateTemporaryCart(trx, otherId!);
+      await addCartItem(trx, { buyerId: otherId!, cartId: theirs.id, productId: p.id, quantity: 1 });
+
+      expect(await listCartLines(trx, { cartId: mine.id, limit: 10 })).toHaveLength(0);
+      expect(await listCartLines(trx, { cartId: theirs.id, limit: 10 })).toHaveLength(1);
     });
   });
 });

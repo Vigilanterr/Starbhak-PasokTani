@@ -77,6 +77,37 @@ export function listRecipeCarts(db: Executor, a: { buyerId: string; afterId: str
   return q.orderBy('id', 'asc').limit(a.limit + 1).execute();
 }
 
+/**
+ * The lines of one cart with the product fields a cart row shows, and the line subtotal (price x quantity,
+ * rounded in SQL). Product lines only: an inner join drops a wait-list line, because the API does not create
+ * those yet. Money and quantity come back as text.
+ */
+export function listCartLines(db: Executor, a: { cartId: string; limit: number }) {
+  return db.selectFrom('cart_items')
+    .innerJoin('products', 'products.id', 'cart_items.product_id')
+    .innerJoin('farmer_profiles', 'farmer_profiles.user_id', 'products.farmer_id')
+    .select([
+      'cart_items.id as id',
+      sql<string>`cart_items.product_id::text`.as('product_id'), // never null: the inner join on products requires it
+      'cart_items.position as position',
+      sql<string>`cart_items.quantity::text`.as('quantity'),
+      'products.slug as slug',
+      'products.name as name',
+      'products.unit as unit',
+      'products.status as status',
+      sql<string>`products.price::text`.as('price'),
+      sql<string>`products.min_order_qty::text`.as('min_order_qty'),
+      sql<string>`products.available_qty::text`.as('available_qty'),
+      'farmer_profiles.shop_name as shop_name',
+      sql<string>`round(products.price * cart_items.quantity)::text`.as('subtotal'),
+    ])
+    .where('cart_items.cart_id', '=', a.cartId)
+    .orderBy('cart_items.position', 'asc')
+    .orderBy('cart_items.id', 'asc')
+    .limit(a.limit)
+    .execute();
+}
+
 /** Renames a recipe cart. A temporary cart never matches (kind filter), so its name cannot be set. */
 export function updateRecipeCart(db: Executor, a: { buyerId: string; cartId: string; name: string; note: string | null }) {
   return db.updateTable('carts')
