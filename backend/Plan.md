@@ -67,13 +67,13 @@ Done when: `.env` targets the dev branch and `select count(*) from regencies` re
 
 ### Phase 1: Foundation
 
-- [ ] Add `kysely` and `kysely-codegen` with `bun add` (0.29.8 and 0.20.0 were current; confirm they are compatible).
-- [ ] Add scripts: `db:types` (codegen from `DATABASE_URL_UNPOOLED`, schema `public`, excluding `schema_migrations`, `spatial_ref_sys` and `audit_logs_*` partitions), `test:repo`, and `typecheck:repo`. Scope the typecheck to `src/repo`, because the legacy code may not pass.
-- [ ] Write `db.ts`, `executor.ts`, `errors.ts`, `money.ts`, `geo.ts`, `test-utils.ts`.
-- [ ] Add a small hand-written type for the read-only `neon_auth."user"` table.
-- [ ] `withActor(userId, fn)` opens a transaction and runs `set_config('app.user_id', $1, true)`. The audit triggers read that setting, and it must be transaction-local because of the pooler.
-- [ ] `errors.ts` maps 23505, 23503, 23514 and 23P01 and wraps the commit, because the ledger and price tier triggers are deferred and fail at `COMMIT`.
-- [ ] The test guard refuses to run unless `NEON_BRANCH` is set and is not `production`.
+- [x] Add `kysely` and `kysely-codegen` with `bun add` (0.29.8 and 0.20.0 were current; confirm they are compatible).
+- [x] Add scripts: `db:types` (codegen from `DATABASE_URL_UNPOOLED`, schema `public`, excluding `schema_migrations`, `spatial_ref_sys` and `audit_logs_*` partitions), `test:repo`, and `typecheck:repo`. Scope the typecheck to `src/repo`, because the legacy code may not pass.
+- [x] Write `db.ts`, `executor.ts`, `errors.ts`, `money.ts`, `geo.ts`, `test-utils.ts`.
+- [x] Add a small hand-written type for the read-only `neon_auth."user"` table.
+- [x] `withActor(userId, fn)` opens a transaction and runs `set_config('app.user_id', $1, true)`. The audit triggers read that setting, and it must be transaction-local because of the pooler.
+- [x] `errors.ts` maps 23505, 23503, 23514 and 23P01 and wraps the commit, because the ledger and price tier triggers are deferred and fail at `COMMIT`.
+- [x] The test guard refuses to run unless `NEON_BRANCH` is set and is not `production`.
 
 Done when: codegen output compiles, a smoke test reads a seeded regency, and a test proves the guard refuses `production`.
 Commit: `feat(repo): add database foundation and generated types`
