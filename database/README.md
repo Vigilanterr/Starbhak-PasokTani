@@ -25,6 +25,7 @@ Each file runs in its own transaction and is recorded in `schema_migrations`. Tr
 | `0004_functions_triggers.sql` | `updated_at`, ledger balance, price tier order, audit and counter triggers. |
 | `0005_roles_grants.sql` | `app_rw` and `app_ro`. |
 | `0006_seed_reference.sql` | Reference data only. |
+| `0007_media_destroyed_at.sql` | `media_assets.destroyed_at`, so the cleanup job can tell "destroy due" from "destroyed". |
 
 ## How `0002` differs from `schema.sql`
 
