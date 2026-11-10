@@ -1,1 +1,83 @@
 @import "tailwindcss";
+
+/* Varian untuk layar pendek (tinggi viewport <= 700px), mis. laptop dengan chrome browser. */
+@custom-variant short (@media (max-height: 700px));
+
+:root {
+  --background: #fcfbf6;
+  --foreground: #173b2b;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+}
+
+/* Pasok Tani brand tokens */
+@theme {
+  --color-brand-900: #064e3b;
+  --color-brand-600: #1e8b5a;
+  --color-accent: #10b981;
+  --color-accent-hover: #0ea371;
+  --color-mint: #d5f6d5;
+  --color-cream: #fcfbf6;
+  --color-ink: #173b2b;
+  --color-muted: #686868;
+  --color-field-border: #7d877e;
+  --color-placeholder: #767676;
+  --color-line: #dee3da;
+  --color-tint: #ebf2eb;
+  --color-danger: #b42318;
+  --color-danger-bg: #fdecea;
+  --color-danger-line: #f2b8b2;
+  --color-danger-ink: #8a1c12;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Landing Jalur Panen (Hero A): satu kali, tidak berulang. */
+@keyframes jalur-naik {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes jalur-rute {
+  from { stroke-dashoffset: 600; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes jalur-pin {
+  0% { opacity: 0; transform: scale(0); }
+  65% { opacity: 1; transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes jalur-label {
+  from { opacity: 0; transform: translateY(10px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes jalur-kilau {
+  0% { opacity: 0; transform: scale(0.2) rotate(-90deg); }
+  60% { opacity: 1; transform: scale(1.2) rotate(8deg); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes jalur-foto {
+  from { opacity: 0; transform: scale(1.04); clip-path: inset(5% round 36px); }
+  to { opacity: 1; transform: none; clip-path: inset(0 round 36px); }
+}
+.jalur-foto { animation: jalur-foto 760ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.jalur-rute { stroke-dasharray: 600; animation: jalur-rute 1150ms cubic-bezier(0.5, 0, 0.25, 1) 450ms backwards; }
+.jalur-pin { transform-box: fill-box; transform-origin: center; animation: jalur-pin 460ms cubic-bezier(0.3, 1.4, 0.5, 1) backwards; }
+.jalur-label { animation: jalur-label 420ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+.jalur-bintang { animation: jalur-kilau 640ms cubic-bezier(0.3, 1.3, 0.5, 1) backwards; }
+
+/* Garis jalur turun sekali saat tahap masuk layar (desktop). */
+.jalur-bawah { transform-origin: 50% 0; transition: transform 400ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+[data-tahap]:not([data-terlihat="ya"]) .jalur-bawah { transform: scaleY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .jalur-foto, .jalur-rute, .jalur-pin, .jalur-label, .jalur-bintang { animation: none !important; }
+  .jalur-bawah { transition: none !important; }
+  [data-tahap] .jalur-bawah { transform: none !important; }
+}

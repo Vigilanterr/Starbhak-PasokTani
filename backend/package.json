@@ -7,7 +7,7 @@
     "dev": "bun run --hot src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target node",
     "start": "bun dist/index.js",
-    "db:init": "psql $DATABASE_URL < migrations/001_init_schema.sql"
+    "db:init": "npm --prefix ../database run migrate"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

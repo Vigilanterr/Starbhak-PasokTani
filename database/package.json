@@ -1,0 +1,12 @@
+{
+  "name": "pasok-tani-database",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate": "node migrate.mjs",
+    "test": "node tests/run.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}
