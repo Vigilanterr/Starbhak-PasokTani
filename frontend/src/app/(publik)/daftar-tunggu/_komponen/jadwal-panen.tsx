@@ -1,6 +1,6 @@
 import type { DaftarTungguTampil, EntriLinimasa } from "@/lib/api/tipe";
 import { TANGGAL_ACUAN } from "@/lib/api/acuan";
-import { awalPanen } from "@/lib/api/katalog";
+import { awalPanen } from "@/lib/api/bersama";
 import { labelJadwalPanen, selisihHari, tanggal } from "@/lib/format";
 import { IkonKalender, IkonPeringatan } from "@/app/_komponen/ikon";
 import { JudulBagian } from "@/app/(publik)/_komponen/judul-bagian";

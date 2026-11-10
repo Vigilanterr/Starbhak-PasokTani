@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { kelasTombolSitus } from "./tombol";
+import { IkonKeranjang } from "./ikon";
 
 type Menu = "belanja" | "solusi" | "fitur";
 
@@ -37,6 +38,26 @@ const BELANJA_JELAJAH = [
   { judul: "Daftar Tunggu", isi: "Pesan sebelum panen", href: "/daftar-tunggu" },
   { judul: "Direktori petani", isi: "Profil, lencana, dan ulasan", href: "/petani" },
 ];
+
+/**
+ * Keadaan masuk untuk header. `null` berarti tamu (tombol Masuk dan Daftar tampil). Untuk orang yang sudah masuk,
+ * `keranjang` berisi jumlah barang di Keranjang Sementara; `null` bila akunnya bukan pembeli.
+ */
+export type SesiHeader = { keranjang: number | null };
+
+function TautanKeranjang({ jumlah, kelas, ikon }: { jumlah: number; kelas: string; ikon: number }) {
+  return (
+    <Link href="/keranjang" className={kelas} aria-label={jumlah > 0 ? `Keranjang, ${jumlah} barang` : "Keranjang"}>
+      <IkonKeranjang size={ikon} />
+      Keranjang
+      {jumlah > 0 && (
+        <span className="grid min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] leading-5 font-bold text-white">
+          {jumlah}
+        </span>
+      )}
+    </Link>
+  );
+}
 
 const MENU_ID: Record<Menu, string> = { belanja: "menu-belanja", solusi: "menu-solusi", fitur: "menu-fitur" };
 const LABEL: Record<Menu, string> = { belanja: "Belanja", solusi: "Solusi", fitur: "Fitur" };
@@ -98,7 +119,7 @@ function Panel({ id, buka, kelas, children }: { id: Menu; buka: Menu | null; kel
   );
 }
 
-export function HeaderSitus() {
+export function HeaderSitus({ sesi = null }: { sesi?: SesiHeader | null }) {
   const [buka, setBuka] = useState<Menu | null>(null);
   const [laci, setLaci] = useState(false);
   const [bagian, setBagian] = useState<Menu | null>("belanja");
@@ -284,12 +305,24 @@ export function HeaderSitus() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <Link href="/masuk" className="hidden h-11 items-center px-3.5 text-[15px] font-bold text-ink no-underline sm:inline-flex">
-            Masuk
-          </Link>
-          <Link href="/daftar" className={`${kelasTombolSitus("aksen")} whitespace-nowrap`}>
-            Daftar
-          </Link>
+          {sesi ? (
+            sesi.keranjang !== null && (
+              <TautanKeranjang
+                jumlah={sesi.keranjang}
+                ikon={20}
+                kelas="relative inline-flex h-11 items-center gap-2 rounded-full px-3.5 text-[15px] font-bold text-ink no-underline hover:bg-tint"
+              />
+            )
+          ) : (
+            <>
+              <Link href="/masuk" className="hidden h-11 items-center px-3.5 text-[15px] font-bold text-ink no-underline sm:inline-flex">
+                Masuk
+              </Link>
+              <Link href="/daftar" className={`${kelasTombolSitus("aksen")} whitespace-nowrap`}>
+                Daftar
+              </Link>
+            </>
+          )}
           <button
             type="button"
             data-pemicu="laci"
@@ -395,14 +428,26 @@ export function HeaderSitus() {
             </li>
           </ul>
         </nav>
-        <div className="mt-4 grid grid-cols-2 gap-2.5">
-          <Link href="/masuk" className="flex h-12 items-center justify-center rounded-full border-[1.5px] border-brand-900 text-base font-bold text-brand-900 no-underline">
-            Masuk
-          </Link>
-          <Link href="/daftar" className="flex h-12 items-center justify-center rounded-full bg-brand-900 text-base font-bold text-white no-underline">
-            Daftar
-          </Link>
-        </div>
+        {sesi ? (
+          sesi.keranjang !== null && (
+            <div className="mt-4 grid grid-cols-1">
+              <TautanKeranjang
+                jumlah={sesi.keranjang}
+                ikon={20}
+                kelas="flex h-12 items-center justify-center gap-2 rounded-full bg-brand-900 text-base font-bold text-white no-underline"
+              />
+            </div>
+          )
+        ) : (
+          <div className="mt-4 grid grid-cols-2 gap-2.5">
+            <Link href="/masuk" className="flex h-12 items-center justify-center rounded-full border-[1.5px] border-brand-900 text-base font-bold text-brand-900 no-underline">
+              Masuk
+            </Link>
+            <Link href="/daftar" className="flex h-12 items-center justify-center rounded-full bg-brand-900 text-base font-bold text-white no-underline">
+              Daftar
+            </Link>
+          </div>
+        )}
       </div>
     </header>
   );

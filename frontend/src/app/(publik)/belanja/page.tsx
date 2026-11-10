@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { ambilBeranda } from "@/lib/api/katalog";
 import { BagianCaraKerja } from "../_beranda/bagian-cara-kerja";
 import { BagianFitur } from "../_beranda/bagian-fitur";
@@ -17,10 +18,18 @@ export const metadata: Metadata = {
 };
 
 /**
- * Beranda (S12, S5). Tidak memakai data saat-permintaan, jadi seluruh halaman di-prerender statis.
- * TODO: saat `ambilBeranda` beralih ke `fetch` backend, beri cache (mis. `"use cache"` + `cacheLife`) agar tetap statis.
+ * Beranda (S12, S5). Data datang dari backend, jadi isinya dibaca di dalam Suspense. Kulit halaman tetap
+ * statis, dan build tidak memanggil backend.
  */
-export default async function Beranda() {
+export default function Beranda() {
+  return (
+    <Suspense fallback={<div aria-busy="true" className="min-h-[60vh]" />}>
+      <IsiBeranda />
+    </Suspense>
+  );
+}
+
+async function IsiBeranda() {
   const { terlaris, baruPanen, surplus, daftarTungguPopuler, kategori, statistik } = await ambilBeranda();
 
   return (

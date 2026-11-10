@@ -1,19 +1,15 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { GridProduk } from "@/app/(publik)/_komponen/grid-produk";
 import { JudulBagian } from "@/app/(publik)/_komponen/judul-bagian";
 import { KartuDaftarTunggu } from "@/app/(publik)/_komponen/kartu-daftar-tunggu";
-import { ambilKatalogPetani, ambilPetaniById, ambilSemuaIdPetani, ambilUlasanPetani } from "@/lib/api/katalog";
+import { ambilKatalogPetani, ambilPetaniById, ambilUlasanPetani } from "@/lib/api/katalog";
 import { angka, desimal1 } from "@/lib/format";
 import { HeaderProfil } from "../_komponen/header-profil";
 import { NavigasiBagian, type ItemNavigasiBagian } from "../_komponen/navigasi-bagian";
 import { TentangPetani } from "../_komponen/tentang-petani";
 import { UlasanPetani } from "../_komponen/ulasan-petani";
-
-export async function generateStaticParams() {
-  const semua = await ambilSemuaIdPetani();
-  return semua.map((id) => ({ id }));
-}
 
 export async function generateMetadata({ params }: PageProps<"/petani/[id]">): Promise<Metadata> {
   const { id } = await params;
@@ -30,7 +26,15 @@ export async function generateMetadata({ params }: PageProps<"/petani/[id]">): P
 const kelasBagian = "scroll-mt-20";
 const kelasKosong = "rounded-2xl border border-dashed border-line bg-white px-6 py-10 text-center text-[15px] text-muted";
 
-export default async function Page({ params }: PageProps<"/petani/[id]">) {
+export default function Page(props: PageProps<"/petani/[id]">) {
+  return (
+    <Suspense fallback={<div aria-busy="true" className="min-h-[60vh]" />}>
+      <IsiHalaman {...props} />
+    </Suspense>
+  );
+}
+
+async function IsiHalaman({ params }: PageProps<"/petani/[id]">) {
   const { id } = await params;
   const petani = await ambilPetaniById(id);
   if (!petani) notFound();

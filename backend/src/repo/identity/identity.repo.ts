@@ -36,6 +36,21 @@ export function findUserWithEmail(db: Executor, userId: string) {
     .executeTakeFirst();
 }
 
+/**
+ * Same join as findUserWithEmail, but soft-deleted rows are returned too. The session check needs this to tell
+ * a deleted account (403) from a signed-in person who never onboarded (403 onboarding_required).
+ */
+export function findAccountWithEmail(db: Executor, userId: string) {
+  return db.selectFrom('users')
+    .innerJoin('neon_auth.user as na', 'na.id', 'users.id')
+    .select([
+      'users.id', 'users.full_name', 'users.phone', 'users.role', 'users.status',
+      'users.onboarded_at', 'users.deleted_at', 'users.avatar_media_id', 'na.email as email',
+    ])
+    .where('users.id', '=', userId)
+    .executeTakeFirst();
+}
+
 export interface NewUser {
   id: string;
   fullName: string;
@@ -169,6 +184,34 @@ export function findAddressForUser(db: Executor, addressId: string, userId: stri
     .where('id', '=', addressId)
     .where('user_id', '=', userId)
     .executeTakeFirst();
+}
+
+/**
+ * The user's addresses with the region names a screen prints (regency slug and name, district name), one query.
+ * Default first, then id. Read-only: the joins use the regency and district codes the address already holds.
+ */
+export function listAddressViewsForUser(db: Executor, userId: string, limit: number) {
+  return db.selectFrom('addresses')
+    .innerJoin('regencies', 'regencies.code', 'addresses.regency_code')
+    .innerJoin('districts', 'districts.code', 'addresses.district_code')
+    .select([
+      'addresses.id as id',
+      'addresses.label as label',
+      'addresses.recipient_name as recipient_name',
+      'addresses.phone as phone',
+      'addresses.street as street',
+      'addresses.postal_code as postal_code',
+      'addresses.notes as notes',
+      'addresses.is_default as is_default',
+      'regencies.slug as regency_slug',
+      'regencies.name as regency_name',
+      'districts.name as district_name',
+    ])
+    .where('addresses.user_id', '=', userId)
+    .orderBy('addresses.is_default', 'desc')
+    .orderBy('addresses.id', 'asc')
+    .limit(limit)
+    .execute();
 }
 
 /**

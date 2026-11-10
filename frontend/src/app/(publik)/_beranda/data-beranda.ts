@@ -1,4 +1,4 @@
-import berandaJson from "@/data/beranda.json";
+import { KONTEN_BERANDA } from "./konten-beranda";
 import type { AturanSurplus, IkonKategori, Satuan } from "@/lib/api/tipe";
 
 /** Kunci ikon fitur di `beranda.json`; dipetakan ke komponen ikon di `bagian-fitur.tsx`. */
@@ -37,4 +37,4 @@ type DataBeranda = {
 };
 
 // JSON diketik longgar oleh TypeScript; bentuknya dijaga oleh tipe di atas.
-export const BERANDA = berandaJson as unknown as DataBeranda;
+export const BERANDA = KONTEN_BERANDA as unknown as DataBeranda;

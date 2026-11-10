@@ -10,11 +10,6 @@ import { KerangkaDaftarProduk } from "../../produk/_komponen/kerangka-daftar";
 import { rapikanFilter, type OpsiKatalog } from "../../produk/_komponen/opsi-katalog";
 import { RelKategori } from "../../produk/_komponen/rel-kategori";
 
-export async function generateStaticParams() {
-  const semua = await ambilKategori();
-  return semua.map((k) => ({ slug: k.slug }));
-}
-
 export async function generateMetadata({ params }: PageProps<"/kategori/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const kategori = await ambilKategoriBySlug(slug);
@@ -22,7 +17,15 @@ export async function generateMetadata({ params }: PageProps<"/kategori/[slug]">
   return { title: kategori.nama, description: kategori.deskripsi };
 }
 
-export default async function Page({ params, searchParams }: PageProps<"/kategori/[slug]">) {
+export default function Page(props: PageProps<"/kategori/[slug]">) {
+  return (
+    <Suspense fallback={<div aria-busy="true" className="min-h-[60vh]" />}>
+      <IsiHalaman {...props} />
+    </Suspense>
+  );
+}
+
+async function IsiHalaman({ params, searchParams }: PageProps<"/kategori/[slug]">) {
   const { slug } = await params;
   const semua = await ambilKategori();
   const kategori = semua.find((k) => k.slug === slug);

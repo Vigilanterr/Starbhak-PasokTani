@@ -16,6 +16,32 @@ export function assertSafeBranch(env: Record<string, string | undefined> = proce
   return branch;
 }
 
+/** Neon endpoint id (`ep-…`) from a Postgres or Neon Auth host, or undefined when the host has none. */
+function endpointOf(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const host = new URL(url).hostname;
+    return host.match(/^(ep-[a-z0-9-]+?)(?:-pooler)?\./)?.[1];
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Refuses to run when Neon Auth and the database point at different endpoints.
+ * Sign-ups would land on one branch while users.id foreign keys point at the other.
+ */
+export function assertAuthMatchesDatabase(env: Record<string, string | undefined> = process.env): void {
+  const db = endpointOf(env.DATABASE_URL_UNPOOLED ?? env.DATABASE_URL);
+  const auth = endpointOf(env.NEON_AUTH_BASE_URL);
+  if (!db || !auth) {
+    throw new Error('Refusing to run repo tests: cannot read the endpoint from DATABASE_URL or NEON_AUTH_BASE_URL');
+  }
+  if (db !== auth) {
+    throw new Error(`Refusing to run repo tests: auth endpoint ${auth} differs from database endpoint ${db}`);
+  }
+}
+
 class Rollback extends Error {}
 
 /**
@@ -24,6 +50,7 @@ class Rollback extends Error {}
  */
 export async function withRollback(fn: (trx: Executor) => Promise<void>): Promise<void> {
   assertSafeBranch();
+  assertAuthMatchesDatabase();
   try {
     await getDb()
       .transaction()

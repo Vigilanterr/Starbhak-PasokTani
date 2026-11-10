@@ -5,9 +5,32 @@ import { CheckViolationError, UniqueViolationError, mapDbError } from './errors'
 import { withActor, withTransaction } from './executor';
 import { getDb } from './db';
 import { numericToNumber, rupiahToNumber } from './money';
-import { assertSafeBranch, settleDeferred, withRollback } from './test-utils';
+import { assertAuthMatchesDatabase, assertSafeBranch, settleDeferred, withRollback } from './test-utils';
 
 afterAll(closeDb);
+
+describe('auth endpoint guard', () => {
+  const db = 'postgresql://u:p@ep-round-hat-aznwazqc-pooler.ap-southeast-1.aws.neon.tech/neondb';
+  test('accepts auth on the same endpoint as the database', () => {
+    expect(() =>
+      assertAuthMatchesDatabase({
+        DATABASE_URL_UNPOOLED: db,
+        NEON_AUTH_BASE_URL: 'https://ep-round-hat-aznwazqc.neonauth.c-3.ap-southeast-1.aws.neon.tech/neondb/auth',
+      }),
+    ).not.toThrow();
+  });
+  test('refuses auth on a different endpoint', () => {
+    expect(() =>
+      assertAuthMatchesDatabase({
+        DATABASE_URL_UNPOOLED: db,
+        NEON_AUTH_BASE_URL: 'https://ep-damp-bird-az8zb4ht.neonauth.c-3.ap-southeast-1.aws.neon.tech/neondb/auth',
+      }),
+    ).toThrow(/ep-damp-bird-az8zb4ht differs from database endpoint ep-round-hat-aznwazqc/);
+  });
+  test('refuses when an endpoint cannot be read', () => {
+    expect(() => assertAuthMatchesDatabase({ DATABASE_URL_UNPOOLED: db })).toThrow(/cannot read the endpoint/);
+  });
+});
 
 describe('branch guard', () => {
   test('refuses production', () => {

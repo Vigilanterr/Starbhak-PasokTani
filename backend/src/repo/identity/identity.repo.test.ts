@@ -5,10 +5,10 @@ import { CheckViolationError, ForeignKeyViolationError, UniqueViolationError, ma
 import type { Executor } from '../executor';
 import { requireTransaction } from '../executor';
 import { withRollback } from '../test-utils';
-import { findRegencyBySlug, listDistrictsForRegency, listRegencies } from './reference.repo';
+import { findDistrictByName, findRegencyBySlug, listDistrictsForRegency, listRegencies } from './reference.repo';
 import {
-  deletePushSubscription, ensureUser, findAddressForUser, findUserById, findUserWithEmail,
-  insertAddress, insertMediaAsset, listAddressesForUser, listNotificationPreferences,
+  deletePushSubscription, ensureUser, findAccountWithEmail, findAddressForUser, findUserById, findUserWithEmail,
+  insertAddress, insertMediaAsset, listAddressesForUser, listAddressViewsForUser, listNotificationPreferences,
   listMediaAwaitingDestroy, listPushSubscriptions, listStalePendingMedia, markMediaDeleted, markMediaDestroyed, markMediaReady,
   markPushSucceeded, markUserOnboarded, markUsersSeen, setDefaultAddress, upsertNotificationPreference,
   upsertPushSubscription,
@@ -69,6 +69,16 @@ describe('reference data', () => {
       expect(rows.every((r) => r.regency_code === regencyCode)).toBe(true);
     });
   });
+
+  test('finds a district by name, ignoring case, only inside its own regency', async () => {
+    await withRollback(async (trx) => {
+      const { regencyCode, districtCode } = await geo(trx);
+      const district = (await listDistrictsForRegency(trx, regencyCode, 1))[0]!;
+      expect(await findDistrictByName(trx, regencyCode, district.name.toUpperCase())).toMatchObject({ code: districtCode });
+      expect(await findDistrictByName(trx, regencyCode, 'Kecamatan Antah Berantah')).toBeUndefined();
+      expect(await findDistrictByName(trx, '0000000000', district.name)).toBeUndefined();
+    });
+  });
 });
 
 describe('users', () => {
@@ -102,6 +112,18 @@ describe('users', () => {
       expect(await findUserById(trx, id!)).toBeDefined();
       await trx.updateTable('users').set({ deleted_at: sql<Date>`now()` }).where('id', '=', id!).execute();
       expect(await findUserById(trx, id!)).toBeUndefined();
+    });
+  });
+
+  test('findAccountWithEmail still returns a soft-deleted row, which findUserWithEmail hides', async () => {
+    await withRollback(async (trx) => {
+      const [id] = await authIds(trx, 1);
+      await ensureUser(trx, { id: id!, fullName: 'Dihapus', role: 'consumer' });
+      await sql`update users set deleted_at = now() where id = ${id!}::uuid`.execute(trx);
+      expect(await findUserWithEmail(trx, id!)).toBeUndefined();
+      const account = await findAccountWithEmail(trx, id!);
+      expect(account?.deleted_at).toBeInstanceOf(Date);
+      expect(account?.email).toBeString();
     });
   });
 
@@ -361,6 +383,34 @@ describe('notifications and push', () => {
       }).catch(mapDbError);
       expect(err).toBeInstanceOf(ForeignKeyViolationError);
       expect((err as ForeignKeyViolationError).constraint).toBe('push_subscriptions_user_id_fkey');
+    });
+  });
+});
+
+describe('address views', () => {
+  test('listAddressViewsForUser prints the regency slug and names, default first, and only the owner\'s rows', async () => {
+    await withRollback(async (trx) => {
+      const [id, otherId] = await authIds(trx, 2);
+      const g = await geo(trx);
+      const regency = (await listRegencies(trx, 1))[0]!;
+      const district = (await listDistrictsForRegency(trx, g.regencyCode, 1))[0]!;
+      await ensureUser(trx, { id: id!, fullName: 'Alamat Tampil', role: 'consumer' });
+      await ensureUser(trx, { id: otherId!, fullName: 'Orang Lain', role: 'consumer' });
+      const a = await insertAddress(trx, addressInput(id!, g, 'A'));
+      const b = await insertAddress(trx, addressInput(id!, g, 'B'));
+      await insertAddress(trx, addressInput(otherId!, g, 'Milik orang lain'));
+      await setDefaultAddress(trx, id!, b.id);
+
+      const rows = await listAddressViewsForUser(trx, id!, 10);
+      expect(rows.map((r) => r.id)).toEqual([b.id, a.id]);
+      expect(rows[0]).toMatchObject({
+        is_default: true,
+        regency_slug: regency.slug,
+        regency_name: regency.name,
+        district_name: district.name,
+        recipient_name: 'Penerima',
+        street: 'Jl. Sawah 1',
+      });
     });
   });
 });

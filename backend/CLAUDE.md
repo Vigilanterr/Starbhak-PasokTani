@@ -2,6 +2,8 @@
 
 The plan for the database query layer is in `Plan.md`. Work through its phases in order and tick the boxes as you go.
 
+The plan for the API on top of the repo layer is in `ApiPlan.md`. It covers services, routes, jobs and integrations, and it replaces the schema v1 API.
+
 ## Git
 
 - No Co-Author on any git commit. No `Co-Authored-By` trailer and no Claude attribution.

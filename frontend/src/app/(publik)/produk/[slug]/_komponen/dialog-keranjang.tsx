@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { kirimPembeli, type Hasil } from "@/lib/api/pembeli";
+import type { Keranjang } from "@/lib/api/tipe";
 import { kelasTombolSitus } from "@/app/_komponen/tombol";
 import { IkonInfo, IkonKeranjang } from "@/app/_komponen/ikon";
 import { angka, LABEL_SATUAN, rupiah } from "@/lib/format";
@@ -37,6 +39,9 @@ function IsiDialogKeranjang({ onTutup }: { onTutup: () => void }) {
   const [nama, setNama] = useState("");
   const [catatan, setCatatan] = useState("");
   const [galat, setGalat] = useState<string | null>(null);
+  const [mengirim, setMengirim] = useState(false);
+  const [galatKirim, setGalatKirim] = useState<string | null>(null);
+  const [sukses, setSukses] = useState<string | null>(null);
   const refNama = useRef<HTMLInputElement>(null);
   const s = LABEL_SATUAN[data.satuan];
 
@@ -44,16 +49,61 @@ function IsiDialogKeranjang({ onTutup }: { onTutup: () => void }) {
   const idGalat = `${id}-galat`;
   const idCatatan = `${id}-catatan`;
 
-  function kirim(e: FormEvent<HTMLFormElement>) {
+  /** Keranjang Sementara, atau grup Keranjang Resep baru yang langsung berisi produk ini. */
+  async function tambahkan(): Promise<Hasil<unknown>> {
+    if (tujuan === "sementara") {
+      return kirimPembeli<Keranjang>("POST", "/keranjang/item", { produkId: data.id, jumlah });
+    }
+    const grup = await kirimPembeli<Keranjang>("POST", "/keranjang-resep", {
+      nama: nama.trim(),
+      catatan: catatan.trim() || null,
+    });
+    if (!grup.ok) return grup;
+    return kirimPembeli<Keranjang>("POST", `/keranjang-resep/${grup.data.id}/item`, { produkId: data.id, jumlah });
+  }
+
+  async function kirim(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (mengirim) return;
     if (tujuan === "baru" && nama.trim() === "") {
       setGalat("Nama grup wajib diisi.");
       refNama.current?.focus();
       return;
     }
-    // TODO: sambungkan ke API keranjang (Keranjang Sementara / buat Keranjang Resep berisi produk ini)
-    // setelah sesi tersedia. Untuk pengunjung, arahkan ke halaman masuk lalu kembali ke produk ini.
-    router.push(hrefMasuk);
+    setMengirim(true);
+    setGalatKirim(null);
+    const hasil = await tambahkan();
+    setMengirim(false);
+
+    if (hasil.ok) {
+      setSukses(tujuan === "baru" ? `Ditambahkan ke Keranjang Resep “${nama.trim()}”.` : "Ditambahkan ke Keranjang Sementara.");
+      router.refresh(); // header menghitung ulang jumlah keranjang
+      return;
+    }
+    // Belum masuk: kirim ke halaman masuk, lalu kembali ke produk ini.
+    if (hasil.status === 401) {
+      router.push(hrefMasuk);
+      return;
+    }
+    setGalatKirim(hasil.fields ? (Object.values(hasil.fields)[0] ?? hasil.pesan) : hasil.pesan);
+  }
+
+  if (sukses) {
+    return (
+      <div className="flex flex-col gap-4">
+        <p role="status" className="rounded-xl bg-mint px-4 py-3 text-[15px] font-semibold text-brand-900">
+          {sukses}
+        </p>
+        <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
+          <button type="button" onClick={onTutup} className={kelasTombolSitus("garis")}>
+            Lanjut belanja
+          </button>
+          <Link href="/keranjang" className={kelasTombolSitus("utama")}>
+            Lihat keranjang
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -164,12 +214,18 @@ function IsiDialogKeranjang({ onTutup }: { onTutup: () => void }) {
         Menambah ke keranjang belum mengunci stok. Stok baru dipesan untukmu saat checkout.
       </p>
 
+      {galatKirim && (
+        <p role="alert" className="mt-4 text-[13px] font-medium text-danger">
+          {galatKirim}
+        </p>
+      )}
+
       <div className="mt-5 flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end">
         <button type="button" onClick={onTutup} className={kelasTombolSitus("garis")}>
           Batal
         </button>
-        <button type="submit" className={kelasTombolSitus("utama")}>
-          {tujuan === "baru" ? "Buat dan tambahkan" : "Tambahkan"}
+        <button type="submit" disabled={mengirim} className={`${kelasTombolSitus("utama")} disabled:cursor-wait disabled:opacity-70`}>
+          {mengirim ? "Menyimpan…" : tujuan === "baru" ? "Buat dan tambahkan" : "Tambahkan"}
         </button>
       </div>
     </form>

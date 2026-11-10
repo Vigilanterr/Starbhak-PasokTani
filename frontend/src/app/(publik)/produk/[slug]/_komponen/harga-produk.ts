@@ -8,6 +8,8 @@ import { angka, LABEL_SATUAN } from "@/lib/format";
 
 /** Data minimum yang dikirim dari Server Component ke kotak beli (semua bisa diserialisasi). */
 export type DataBeli = {
+  /** Id produk, dipakai saat menambah ke keranjang. */
+  id: string;
   slug: string;
   nama: string;
   satuan: Satuan;
