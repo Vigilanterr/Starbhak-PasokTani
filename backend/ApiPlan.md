@@ -159,6 +159,7 @@ Commit: `refactor(api)!: remove the schema v1 API and deploy the new skeleton`
 - [x] Frontend: `/daftar/lengkapi`, a gate page for anyone signed in without a profile (Google sign-ins, or sign-up that had no session yet). Onboarded accounts go straight to `?lanjut=` or `/`.
 - [x] Frontend: `src/proxy.ts` for early redirects from the cookie: guests off the auth pages, signed-out users off `/daftar/lengkapi`. The role check in each group's layout comes with the `(pembeli)` and `(petani)` groups in Phase 4. Read from `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`.
 - [x] Add the Vercel preview and production domains to Neon Auth trusted domains, on both branches. Recorded in `b985527`.
+- [x] Trusted domains: preview alias `https://pasoktani-preview-achyon.vercel.app` on dev (`br-icy-sea-azw329fy`). Production domain `https://pasoktani.vercel.app` on production (`br-damp-sun-az1sytdk`). Production variables `DATABASE_URL`, `NEON_AUTH_BASE_URL`, `CRON_SECRET` and `NEON_AUTH_COOKIE_SECRET` written from the production branch, with fresh secrets.
 - [ ] One real-session test built from `test-neon-signup.ts`, on the dev branch only. Not written: that script imports `src/lib/neon-auth.js`, which Phase 1 deleted, and each run creates a real account on the dev auth.
 
 Done when: a browser sign-up on a preview deployment reaches `GET /api/v1/me` with the right role.
