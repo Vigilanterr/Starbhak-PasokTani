@@ -7,22 +7,30 @@
     "dev": "bun run --hot src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target node",
     "start": "bun dist/index.js",
-    "db:init": "npm --prefix ../database run migrate"
+    "db:init": "npm --prefix ../database run migrate",
+    "db:types": "kysely-codegen --env-file .env --url 'env(DATABASE_URL_UNPOOLED)' --dialect postgres --default-schema public --exclude-pattern '{*.schema_migrations,*.spatial_ref_sys,*.geography_columns,*.geometry_columns,*.audit_logs_*,neon_auth.*}' --out-file src/repo/db.generated.ts",
+    "test:repo": "bun test --timeout 30000 src/repo",
+    "typecheck:repo": "tsc --noEmit -p tsconfig.repo.json"
   },
   "dependencies": {
+    "@neon/auth": "^0.8.2",
+    "@neon/config": "^1.13.0",
+    "@neon/env": "^2.1.0",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.10.0",
     "hono": "^4.13.13",
     "jsonwebtoken": "^9.0.2",
+    "kysely": "0.29.8",
     "midtrans-client": "^1.4.3",
     "pg": "^8.23.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/bun": "^1.4.2",
     "@types/bcryptjs": "^2.4.6",
+    "@types/bun": "^1.4.2",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/pg": "^8.12.1",
+    "kysely-codegen": "0.20.0",
     "typescript": "^5.7.2"
   }
 }

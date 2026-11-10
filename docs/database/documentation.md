@@ -127,7 +127,7 @@ neon_auth.session / account / verification  -> not read by the app
 - **`farmer_profiles` is 1:1 with `users`** and uses `user_id` as its primary key. Other tables reference `farmer_profiles.user_id`, so an FK can only point at a real farmer, not just any user.
 - **Verification is a history table** (`farmer_verifications`), with the current state copied to `farmer_profiles.verification_status`. Admins can see rejected attempts and their reasons. KTP numbers and bank account numbers are **encrypted in the application** (`bytea`). Only the last 4 digits are stored in plain text, for display. The KTP and land photos are Cloudinary assets with `authenticated` delivery: they can only be opened through short-lived signed URLs that the backend gives to admins.
 - **Store holidays use a PG18 temporal constraint:** `UNIQUE (farmer_id, period WITHOUT OVERLAPS)` on a `daterange`. The database itself rejects overlapping holidays, with no custom trigger.
-- **Badges are data, not code.** `badges.criteria` holds the thresholds as `jsonb`, so admins can tune them ("numbers are adjustable", S6). `farmer_badges` keeps the award and revoke history. A partial unique index allows only one *active* award per badge.
+- **Badges are data, not code.** `badges.criteria` holds the thresholds as `jsonb`, so admins can tune them ("numbers are adjustable", S6). `farmer_badges` keeps the award and revoke history. A partial unique index allows only one *active* award per badge. The monthly job reads `criteria` keys on `farmer_profiles` data: `min_completed_orders`, `min_rating_count`, `min_rating_avg`, `max_avg_response_minutes`, `min_age_days`, `max_age_days`, `verified`. Empty or unknown criteria are refused, so a badge with `{}` is never evaluated.
 
 ### 4.3 Catalog, batches and stock (S2, S3, S7, S11)
 
@@ -410,7 +410,7 @@ GitHub Actions schedules use UTC and run at least 5 minutes apart. They can be d
 | Outbox sweep | every 5 minutes | Safety net for `outbox_events` not dispatched after commit: notifications, push, digests, Redis publish for live SSE updates |
 | Badge evaluation | monthly | Awards and revokes badges |
 | Analytics rollup + reconciliation | nightly | Flushes Redis view/cart counters into `product_daily_stats`; checks cached counters against source tables |
-| Media cleanup | hourly | Destroys Cloudinary assets that are still `pending` after 24 h, or whose parent was deleted |
+| Media cleanup | hourly | Marks `pending` assets older than 24 h as `deleted`, then destroys every `deleted` asset with no `destroyed_at` on Cloudinary and stamps `destroyed_at` |
 | Presence flush | every 5 minutes | Copies Redis `presence:*` into `users.last_seen_at` |
 
 The workflow also needs two settings in GitHub: the secret `CRON_SECRET` (shared with the Vercel project) and the variable `APP_URL` (the deployed origin).
